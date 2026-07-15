@@ -1,10 +1,17 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
+import { AsgardeoProvider } from "@asgardeo/react";
+
+import './index.css';
+import App from './App.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
-  </StrictMode>,
-)
+    <AsgardeoProvider
+      clientId="27SjrIh3SkgmM7Q5unAqorZfwjka"
+      baseUrl="https://api.asgardeo.io/t/uvinidev"
+    >
+      <App />
+    </AsgardeoProvider>
+  </StrictMode>
+);

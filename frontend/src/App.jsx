@@ -1,20 +1,52 @@
-import { useEffect, useState } from "react";
+import { useAsgardeo } from "@asgardeo/react";
 
 function App() {
-  const [message, setMessage] = useState("");
+  const { isSignedIn, user, signIn, signOut } = useAsgardeo();
 
-  useEffect(() => {
-    fetch("http://localhost:3002/api/message")
-      .then((response) => response.text())
-      .then((data) => setMessage(data))
-      .catch((error) => console.error("Error fetching message:", error));
-  }, []);
+  const handleSignIn = async () => {
+    try {
+      await signIn();
+    } catch (error) {
+      console.error("Sign-in failed:", error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Sign-out failed:", error);
+    }
+  };
 
   return (
-    <div>
-      <h1>Paws Home</h1>
-      <p>{message}</p>
-    </div>
+    <main
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        gap: "16px",
+      }}
+    >
+      <h1> 🐾 Paws and Homes </h1>
+      {isSignedIn ? (
+        <>
+        <h2>Welcome, {user?.userName || user?.username || "User"}!</h2>
+        <button type="button" onClick={handleSignOut}>
+          Sign Out
+        </button>
+        </>
+      ) : (
+        <>
+          <p>Please sign in to continue.</p>
+          <button type="button" onClick={handleSignIn}>
+            Sign In with Asgardeo
+          </button>
+        </>
+      )}
+    </main>
   );
 }
 
