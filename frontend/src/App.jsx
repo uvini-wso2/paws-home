@@ -13,12 +13,26 @@ function App() {
     getAccessToken,
   } = useAsgardeo();
 
+  console.log("SIGNED-IN USER:", user);
+
+  const rawRoles = user?.roles ?? [];
+
+  const roles = Array.isArray(rawRoles)
+    ? rawRoles
+    : String(rawRoles)
+        .split(",")
+        .map((roleName) => roleName.trim())
+        .filter(Boolean);
+
+  const isAdopter = roles.includes("Adopter");
+  const isShelterStaff = roles.includes("Shelter Staff");
+
+  const [currentPage, setCurrentPage] = useState("home");
   const [showSettings, setShowSettings] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
   const [profile, setProfile] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -58,10 +72,13 @@ function App() {
       : primaryItem?.value ?? "";
   };
 
-  const loadProfile = async () => {
+  const loadProfile = async ({ clearSuccess = true } = {}) => {
     setLoadingProfile(true);
     setProfileError("");
-    setSuccessMessage("");
+
+    if (clearSuccess) {
+      setSuccessMessage("");
+    }
 
     try {
       const accessToken = await getAccessToken();
@@ -96,6 +113,7 @@ function App() {
       });
     } catch (error) {
       console.error("Failed to load profile:", error);
+
       setProfileError(
         error instanceof Error
           ? error.message
@@ -193,16 +211,18 @@ function App() {
         const errorText = await response.text();
 
         throw new Error(
-          `Could not update profile. Status: ${
-            response.status
-          }. ${errorText}`
+          `Could not update profile. Status: ${response.status}. ${errorText}`
         );
       }
 
       setSuccessMessage("Profile updated successfully.");
-      await loadProfile();
+
+      await loadProfile({
+        clearSuccess: false,
+      });
     } catch (error) {
       console.error("Failed to update profile:", error);
+
       setProfileError(
         error instanceof Error
           ? error.message
@@ -219,6 +239,12 @@ function App() {
     user?.userName ||
     user?.username ||
     "User";
+
+  const verificationStatus =
+    profile?.verified ??
+    profile?.emailVerified ??
+    profile?.active ??
+    false;
 
   return (
     <main
@@ -242,14 +268,73 @@ function App() {
 
         {isSignedIn ? (
           <>
-            {!showSettings ? (
+            {!showSettings && currentPage === "home"? (
               <section style={{ textAlign: "center" }}>
                 <h2>Welcome, {displayName}!</h2>
 
                 <p>
-                  You are successfully signed in through
-                  WSO2 Identity Platform.
+                  You are successfully signed in through WSO2
+                  Identity Platform.
                 </p>
+
+                <p>
+                  <strong>Role:</strong>{" "}
+                  {roles.length > 0
+                    ? roles.join(", ")
+                    : "No role assigned"}
+                </p>
+
+                {isAdopter && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "12px",
+                      margin: "20px 0",
+                    }}
+                  >
+                    <button 
+                      type="button"
+                      onClick={() => setCurrentPage("browsePets")}
+                    >
+                      Browse Pets for Adoption
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={() => setCurrentPage("myApplications")}
+                    >
+                      View My Adoption Applications
+                    </button>
+                  </div>
+                )}
+
+                {isShelterStaff && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: "12px",
+                      margin: "20px 0",
+                    }}
+                  >
+                    <button 
+                      type="button"
+                      onClick={() => setCurrentPage("addPet")}
+                    >
+                      Add New Pet
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={() => setCurrentPage("manageListings")}
+                    >
+                      Manage My Listings
+                    </button>
+                  </div>
+                )}
 
                 <button
                   type="button"
@@ -258,6 +343,55 @@ function App() {
                   Profile Settings
                 </button>
               </section>
+
+              ): currentPage === "browsePets" ? (
+                <section style={{ textAlign: "center" }}>
+                  <h2>Browse Pets for Adoption</h2>
+                  <p>Available pets will be displayed here.</p>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage("home")}
+                  >
+                    Back to Home
+                  </button>
+                </section>
+              ) : currentPage === "myApplications" ? (
+                <section style={{ textAlign: "center" }}>
+                  <h2>My Adoption Applications</h2>
+                  <p>Your applications will be displayed here.</p>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage("home")}
+                  >
+                    Back to Home
+                  </button>
+                </section>
+              ) : currentPage === "addPet" ? (
+                <section style={{ textAlign: "center" }}>
+                  <h2>Add New Pet</h2>
+                  <p>Form to add a new pet will be displayed here.</p>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage("home")}
+                  >
+                    Back to Home
+                  </button>
+                </section>
+              ) : currentPage === "manageListings" ? (
+                <section style={{ textAlign: "center" }}>
+                  <h2>Manage My Listings</h2>
+                  <p>Your pet listings will be displayed here.</p>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage("home")}
+                  >
+                    Back to Home
+                  </button>
+                </section>
             ) : (
               <section
                 style={{
@@ -288,9 +422,13 @@ function App() {
                 {profile && !loadingProfile && (
                   <form onSubmit={saveProfile}>
                     <label
-                      style={{ display: "block", marginBottom: "16px" }}
+                      style={{
+                        display: "block",
+                        marginBottom: "16px",
+                      }}
                     >
                       Username — read-only
+
                       <input
                         type="text"
                         value={profile.userName ?? ""}
@@ -300,14 +438,19 @@ function App() {
                           width: "100%",
                           padding: "10px",
                           marginTop: "6px",
+                          boxSizing: "border-box",
                         }}
                       />
                     </label>
 
                     <label
-                      style={{ display: "block", marginBottom: "16px" }}
+                      style={{
+                        display: "block",
+                        marginBottom: "16px",
+                      }}
                     >
                       First name
+
                       <input
                         type="text"
                         name="givenName"
@@ -318,14 +461,19 @@ function App() {
                           width: "100%",
                           padding: "10px",
                           marginTop: "6px",
+                          boxSizing: "border-box",
                         }}
                       />
                     </label>
 
                     <label
-                      style={{ display: "block", marginBottom: "16px" }}
+                      style={{
+                        display: "block",
+                        marginBottom: "16px",
+                      }}
                     >
                       Last name
+
                       <input
                         type="text"
                         name="familyName"
@@ -336,14 +484,19 @@ function App() {
                           width: "100%",
                           padding: "10px",
                           marginTop: "6px",
+                          boxSizing: "border-box",
                         }}
                       />
                     </label>
 
                     <label
-                      style={{ display: "block", marginBottom: "16px" }}
+                      style={{
+                        display: "block",
+                        marginBottom: "16px",
+                      }}
                     >
                       Email
+
                       <input
                         type="email"
                         name="email"
@@ -354,14 +507,19 @@ function App() {
                           width: "100%",
                           padding: "10px",
                           marginTop: "6px",
+                          boxSizing: "border-box",
                         }}
                       />
                     </label>
 
                     <label
-                      style={{ display: "block", marginBottom: "16px" }}
+                      style={{
+                        display: "block",
+                        marginBottom: "16px",
+                      }}
                     >
                       Phone number
+
                       <input
                         type="tel"
                         name="phone"
@@ -373,33 +531,37 @@ function App() {
                           width: "100%",
                           padding: "10px",
                           marginTop: "6px",
+                          boxSizing: "border-box",
                         }}
                       />
                     </label>
 
                     <label
-                      style={{ display: "block", marginBottom: "16px" }}
+                      style={{
+                        display: "block",
+                        marginBottom: "16px",
+                      }}
                     >
                       Home address — optional
+
                       <textarea
                         name="address"
                         value={formData.address}
                         onChange={handleInputChange}
-                        rows="3"
+                        rows={3}
                         style={{
                           display: "block",
                           width: "100%",
                           padding: "10px",
                           marginTop: "6px",
+                          boxSizing: "border-box",
                         }}
                       />
                     </label>
 
                     <p>
                       <strong>Verification status:</strong>{" "}
-                      {profile.verified ??
-                      profile.emailVerified ??
-                      profile.active
+                      {verificationStatus
                         ? "Verified / Active"
                         : "Not verified"}
                     </p>

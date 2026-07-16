@@ -10,6 +10,12 @@ createRoot(document.getElementById('root')).render(
     <AsgardeoProvider
       clientId="27SjrIh3SkgmM7Q5unAqorZfwjka"
       baseUrl="https://api.asgardeo.io/t/uvinidev"
+      scopes={[
+        "openid",
+        "profile",
+        "roles",
+        "internal_login",
+      ]}
     >
       <App />
     </AsgardeoProvider>
