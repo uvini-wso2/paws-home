@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { useAsgardeo } from "@asgardeo/react";
 
-const PROFILE_URL =
-  "https://api.asgardeo.io/t/uvinidev/scim2/Me";
+import HomePage from "./pages/Home";
+import BrowsePetsPage from "./pages/BrowsePetsPage";
+import MyApplicationsPage from "./pages/MyApplicationsPage";
+import AddPetPage from "./pages/AddPetPage";
+import ManageListingsPage from "./pages/ManageListingsPage";
+import ProfileSettingsPage from "./pages/ProfileSettingsPage";
 
 function App() {
   const {
@@ -13,8 +17,21 @@ function App() {
     getAccessToken,
   } = useAsgardeo();
 
+  const [currentPage, setCurrentPage] = useState("home");
+  const [showSettings, setShowSettings] = useState(false);
+  const [authError, setAuthError] = useState("");
+
   console.log("SIGNED-IN USER:", user);
 
+  /*
+   * The roles value may be returned as:
+   * "Adopter"
+   *
+   * or:
+   * ["Adopter"]
+   *
+   * This converts both formats into an array.
+   */
   const rawRoles = user?.roles ?? [];
 
   const roles = Array.isArray(rawRoles)
@@ -25,213 +42,10 @@ function App() {
         .filter(Boolean);
 
   const isAdopter = roles.includes("Adopter");
-  const isShelterStaff = roles.includes("Shelter Staff");
 
-  const [currentPage, setCurrentPage] = useState("home");
-  const [showSettings, setShowSettings] = useState(false);
-  const [loadingProfile, setLoadingProfile] = useState(false);
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [profileError, setProfileError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [profile, setProfile] = useState(null);
-
-  const [formData, setFormData] = useState({
-    givenName: "",
-    familyName: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
-
-  const handleSignIn = async () => {
-    try {
-      await signIn();
-    } catch (error) {
-      console.error("Sign-in failed:", error);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-    } catch (error) {
-      console.error("Sign-out failed:", error);
-    }
-  };
-
-  const getValueFromArray = (items) => {
-    if (!Array.isArray(items) || items.length === 0) {
-      return "";
-    }
-
-    const primaryItem =
-      items.find((item) => item?.primary) ?? items[0];
-
-    return typeof primaryItem === "string"
-      ? primaryItem
-      : primaryItem?.value ?? "";
-  };
-
-  const loadProfile = async ({ clearSuccess = true } = {}) => {
-    setLoadingProfile(true);
-    setProfileError("");
-
-    if (clearSuccess) {
-      setSuccessMessage("");
-    }
-
-    try {
-      const accessToken = await getAccessToken();
-
-      const response = await fetch(PROFILE_URL, {
-        method: "GET",
-        headers: {
-          Accept: "application/scim+json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Could not load profile. Status: ${response.status}`
-        );
-      }
-
-      const data = await response.json();
-
-      setProfile(data);
-
-      setFormData({
-        givenName: data.name?.givenName ?? "",
-        familyName: data.name?.familyName ?? "",
-        email: getValueFromArray(data.emails),
-        phone: getValueFromArray(data.phoneNumbers),
-        address:
-          data.addresses?.[0]?.formatted ??
-          data.addresses?.[0]?.streetAddress ??
-          "",
-      });
-    } catch (error) {
-      console.error("Failed to load profile:", error);
-
-      setProfileError(
-        error instanceof Error
-          ? error.message
-          : "Unable to load profile."
-      );
-    } finally {
-      setLoadingProfile(false);
-    }
-  };
-
-  const openSettings = async () => {
-    setShowSettings(true);
-    await loadProfile();
-  };
-
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-
-    setFormData((currentData) => ({
-      ...currentData,
-      [name]: value,
-    }));
-  };
-
-  const saveProfile = async (event) => {
-    event.preventDefault();
-
-    setSavingProfile(true);
-    setProfileError("");
-    setSuccessMessage("");
-
-    try {
-      const accessToken = await getAccessToken();
-
-      const patchBody = {
-        schemas: [
-          "urn:ietf:params:scim:api:messages:2.0:PatchOp",
-        ],
-        Operations: [
-          {
-            op: "replace",
-            path: "name",
-            value: {
-              givenName: formData.givenName,
-              familyName: formData.familyName,
-            },
-          },
-          {
-            op: "replace",
-            path: "emails",
-            value: [
-              {
-                value: formData.email,
-                type: "work",
-                primary: true,
-              },
-            ],
-          },
-          {
-            op: "replace",
-            path: "phoneNumbers",
-            value: [
-              {
-                value: formData.phone,
-                type: "mobile",
-                primary: true,
-              },
-            ],
-          },
-          {
-            op: "replace",
-            path: "addresses",
-            value: [
-              {
-                formatted: formData.address,
-                type: "home",
-                primary: true,
-              },
-            ],
-          },
-        ],
-      };
-
-      const response = await fetch(PROFILE_URL, {
-        method: "PATCH",
-        headers: {
-          Accept: "application/scim+json",
-          "Content-Type": "application/scim+json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify(patchBody),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-
-        throw new Error(
-          `Could not update profile. Status: ${response.status}. ${errorText}`
-        );
-      }
-
-      setSuccessMessage("Profile updated successfully.");
-
-      await loadProfile({
-        clearSuccess: false,
-      });
-    } catch (error) {
-      console.error("Failed to update profile:", error);
-
-      setProfileError(
-        error instanceof Error
-          ? error.message
-          : "Unable to update profile."
-      );
-    } finally {
-      setSavingProfile(false);
-    }
-  };
+  const isShelterStaff =
+    roles.includes("Shelter Staff") ||
+    roles.includes("shelter-staff");
 
   const displayName =
     user?.displayName ||
@@ -240,11 +54,52 @@ function App() {
     user?.username ||
     "User";
 
-  const verificationStatus =
-    profile?.verified ??
-    profile?.emailVerified ??
-    profile?.active ??
-    false;
+  const handleSignIn = async () => {
+    try {
+      setAuthError("");
+      await signIn();
+    } catch (error) {
+      console.error("Sign-in failed:", error);
+
+      setAuthError(
+        error instanceof Error
+          ? error.message
+          : "Sign-in failed."
+      );
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      setAuthError("");
+      setCurrentPage("home");
+      setShowSettings(false);
+
+      await signOut();
+    } catch (error) {
+      console.error("Sign-out failed:", error);
+
+      setAuthError(
+        error instanceof Error
+          ? error.message
+          : "Sign-out failed."
+      );
+    }
+  };
+
+  const navigateToPage = (pageName) => {
+    setShowSettings(false);
+    setCurrentPage(pageName);
+  };
+
+  const openSettings = () => {
+    setShowSettings(true);
+  };
+
+  const closeSettings = () => {
+    setShowSettings(false);
+    setCurrentPage("home");
+  };
 
   return (
     <main
@@ -266,334 +121,72 @@ function App() {
           🐾 Paws and Homes
         </h1>
 
+        {authError && (
+          <p
+            style={{
+              color: "crimson",
+              textAlign: "center",
+            }}
+          >
+            {authError}
+          </p>
+        )}
+
         {isSignedIn ? (
           <>
-            {!showSettings && currentPage === "home"? (
-              <section style={{ textAlign: "center" }}>
-                <h2>Welcome, {displayName}!</h2>
+            {currentPage === "home" &&
+              !showSettings && (
+                <HomePage
+                  displayName={displayName}
+                  roles={roles}
+                  isAdopter={isAdopter}
+                  isShelterStaff={isShelterStaff}
+                  onNavigate={navigateToPage}
+                  onOpenSettings={openSettings}
+                />
+              )}
 
-                <p>
-                  You are successfully signed in through WSO2
-                  Identity Platform.
-                </p>
+            {currentPage === "browsePets" &&
+              !showSettings && (
+                <BrowsePetsPage
+                  onBack={() =>
+                    navigateToPage("home")
+                  }
+                />
+              )}
 
-                <p>
-                  <strong>Role:</strong>{" "}
-                  {roles.length > 0
-                    ? roles.join(", ")
-                    : "No role assigned"}
-                </p>
+            {currentPage === "myApplications" &&
+              !showSettings && (
+                <MyApplicationsPage
+                  onBack={() =>
+                    navigateToPage("home")
+                  }
+                />
+              )}
 
-                {isAdopter && (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: "12px",
-                      margin: "20px 0",
-                    }}
-                  >
-                    <button 
-                      type="button"
-                      onClick={() => setCurrentPage("browsePets")}
-                    >
-                      Browse Pets for Adoption
-                    </button>
+            {currentPage === "addPet" &&
+              !showSettings && (
+                <AddPetPage
+                  onBack={() =>
+                    navigateToPage("home")
+                  }
+                />
+              )}
 
-                    <button 
-                      type="button"
-                      onClick={() => setCurrentPage("myApplications")}
-                    >
-                      View My Adoption Applications
-                    </button>
-                  </div>
-                )}
+            {currentPage === "manageListings" &&
+              !showSettings && (
+                <ManageListingsPage
+                  onBack={() =>
+                    navigateToPage("home")
+                  }
+                />
+              )}
 
-                {isShelterStaff && (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: "12px",
-                      margin: "20px 0",
-                    }}
-                  >
-                    <button 
-                      type="button"
-                      onClick={() => setCurrentPage("addPet")}
-                    >
-                      Add New Pet
-                    </button>
-
-                    <button 
-                      type="button"
-                      onClick={() => setCurrentPage("manageListings")}
-                    >
-                      Manage My Listings
-                    </button>
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  onClick={openSettings}
-                >
-                  Profile Settings
-                </button>
-              </section>
-
-              ): currentPage === "browsePets" ? (
-                <section style={{ textAlign: "center" }}>
-                  <h2>Browse Pets for Adoption</h2>
-                  <p>Available pets will be displayed here.</p>
-
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage("home")}
-                  >
-                    Back to Home
-                  </button>
-                </section>
-              ) : currentPage === "myApplications" ? (
-                <section style={{ textAlign: "center" }}>
-                  <h2>My Adoption Applications</h2>
-                  <p>Your applications will be displayed here.</p>
-
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage("home")}
-                  >
-                    Back to Home
-                  </button>
-                </section>
-              ) : currentPage === "addPet" ? (
-                <section style={{ textAlign: "center" }}>
-                  <h2>Add New Pet</h2>
-                  <p>Form to add a new pet will be displayed here.</p>
-
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage("home")}
-                  >
-                    Back to Home
-                  </button>
-                </section>
-              ) : currentPage === "manageListings" ? (
-                <section style={{ textAlign: "center" }}>
-                  <h2>Manage My Listings</h2>
-                  <p>Your pet listings will be displayed here.</p>
-
-                  <button
-                    type="button"
-                    onClick={() => setCurrentPage("home")}
-                  >
-                    Back to Home
-                  </button>
-                </section>
-            ) : (
-              <section
-                style={{
-                  marginTop: "30px",
-                  padding: "30px",
-                  backgroundColor: "white",
-                  borderRadius: "12px",
-                }}
-              >
-                <h2>Profile Settings</h2>
-
-                {loadingProfile && (
-                  <p>Loading profile...</p>
-                )}
-
-                {profileError && (
-                  <p style={{ color: "crimson" }}>
-                    {profileError}
-                  </p>
-                )}
-
-                {successMessage && (
-                  <p style={{ color: "green" }}>
-                    {successMessage}
-                  </p>
-                )}
-
-                {profile && !loadingProfile && (
-                  <form onSubmit={saveProfile}>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "16px",
-                      }}
-                    >
-                      Username — read-only
-
-                      <input
-                        type="text"
-                        value={profile.userName ?? ""}
-                        disabled
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          padding: "10px",
-                          marginTop: "6px",
-                          boxSizing: "border-box",
-                        }}
-                      />
-                    </label>
-
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "16px",
-                      }}
-                    >
-                      First name
-
-                      <input
-                        type="text"
-                        name="givenName"
-                        value={formData.givenName}
-                        onChange={handleInputChange}
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          padding: "10px",
-                          marginTop: "6px",
-                          boxSizing: "border-box",
-                        }}
-                      />
-                    </label>
-
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "16px",
-                      }}
-                    >
-                      Last name
-
-                      <input
-                        type="text"
-                        name="familyName"
-                        value={formData.familyName}
-                        onChange={handleInputChange}
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          padding: "10px",
-                          marginTop: "6px",
-                          boxSizing: "border-box",
-                        }}
-                      />
-                    </label>
-
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "16px",
-                      }}
-                    >
-                      Email
-
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          padding: "10px",
-                          marginTop: "6px",
-                          boxSizing: "border-box",
-                        }}
-                      />
-                    </label>
-
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "16px",
-                      }}
-                    >
-                      Phone number
-
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        placeholder="+94 77 123 4567"
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          padding: "10px",
-                          marginTop: "6px",
-                          boxSizing: "border-box",
-                        }}
-                      />
-                    </label>
-
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "16px",
-                      }}
-                    >
-                      Home address — optional
-
-                      <textarea
-                        name="address"
-                        value={formData.address}
-                        onChange={handleInputChange}
-                        rows={3}
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          padding: "10px",
-                          marginTop: "6px",
-                          boxSizing: "border-box",
-                        }}
-                      />
-                    </label>
-
-                    <p>
-                      <strong>Verification status:</strong>{" "}
-                      {verificationStatus
-                        ? "Verified / Active"
-                        : "Not verified"}
-                    </p>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: "12px",
-                        marginTop: "20px",
-                      }}
-                    >
-                      <button
-                        type="submit"
-                        disabled={savingProfile}
-                      >
-                        {savingProfile
-                          ? "Saving..."
-                          : "Save Changes"}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowSettings(false)
-                        }
-                      >
-                        Back to Home
-                      </button>
-                    </div>
-                  </form>
-                )}
-              </section>
+            {showSettings && (
+              <ProfileSettingsPage
+                getAccessToken={getAccessToken}
+                onBack={closeSettings}
+              />
             )}
 
             <div
