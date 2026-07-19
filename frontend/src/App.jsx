@@ -7,6 +7,9 @@ import MyApplicationsPage from "./pages/MyApplicationsPage";
 import AddPetPage from "./pages/AddPetPage";
 import ManageListingsPage from "./pages/ManageListingsPage";
 import ProfileSettingsPage from "./pages/ProfileSettingsPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+
+import "./App.css";
 
 function App() {
   const {
@@ -21,17 +24,6 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [authError, setAuthError] = useState("");
 
-  console.log("SIGNED-IN USER:", user);
-
-  /*
-   * The roles value may be returned as:
-   * "Adopter"
-   *
-   * or:
-   * ["Adopter"]
-   *
-   * This converts both formats into an array.
-   */
   const rawRoles = user?.roles ?? [];
 
   const roles = Array.isArray(rawRoles)
@@ -46,6 +38,10 @@ function App() {
   const isShelterStaff =
     roles.includes("Shelter Staff") ||
     roles.includes("shelter-staff");
+  
+  const isAdmin =
+    roles.includes("Admin") ||
+    roles.includes("admin");
 
   const displayName =
     user?.displayName ||
@@ -101,122 +97,181 @@ function App() {
     setCurrentPage("home");
   };
 
-  return (
-    <main
-      style={{
-        minHeight: "100vh",
-        padding: "40px 20px",
-        backgroundColor: "#f5f5f5",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "700px",
-          margin: "0 auto",
-        }}
-      >
-        <h1 style={{ textAlign: "center" }}>
-          🐾 Paws and Homes
-        </h1>
-
-        {authError && (
-          <p
+  if (!isSignedIn) {
+    return (
+      <div className="app-shell">
+        <main className="app-main">
+          <section
+            className="page-card"
             style={{
-              color: "crimson",
+              maxWidth: "520px",
+              margin: "80px auto 0",
               textAlign: "center",
             }}
           >
-            {authError}
-          </p>
-        )}
-
-        {isSignedIn ? (
-          <>
-            {currentPage === "home" &&
-              !showSettings && (
-                <HomePage
-                  displayName={displayName}
-                  roles={roles}
-                  isAdopter={isAdopter}
-                  isShelterStaff={isShelterStaff}
-                  onNavigate={navigateToPage}
-                  onOpenSettings={openSettings}
-                />
-              )}
-
-            {currentPage === "browsePets" &&
-              !showSettings && (
-                <BrowsePetsPage
-                  onBack={() =>
-                    navigateToPage("home")
-                  }
-                />
-              )}
-
-            {currentPage === "myApplications" &&
-              !showSettings && (
-                <MyApplicationsPage
-                  onBack={() =>
-                    navigateToPage("home")
-                  }
-                />
-              )}
-
-            {currentPage === "addPet" &&
-              !showSettings && (
-                <AddPetPage
-                  onBack={() =>
-                    navigateToPage("home")
-                  }
-                />
-              )}
-
-            {currentPage === "manageListings" &&
-              !showSettings && (
-                <ManageListingsPage
-                  onBack={() =>
-                    navigateToPage("home")
-                  }
-                />
-              )}
-
-            {showSettings && (
-              <ProfileSettingsPage
-                getAccessToken={getAccessToken}
-                onBack={closeSettings}
-              />
-            )}
-
             <div
+              className="brand-icon"
               style={{
-                textAlign: "center",
-                marginTop: "24px",
+                margin: "0 auto 16px",
               }}
             >
-              <button
-                type="button"
-                onClick={handleSignOut}
-              >
-                Logout
-              </button>
+              🐾
             </div>
-          </>
-        ) : (
-          <section style={{ textAlign: "center" }}>
-            <p>Please sign in to continue.</p>
+
+            <h1 className="page-title">
+              Paws & Homes
+            </h1>
+
+            <p className="page-subtitle">
+              Helping pets find safe and loving homes.
+            </p>
+
+            {authError && (
+              <div className="alert alert-error">
+                {authError}
+              </div>
+            )}
 
             <button
               type="button"
+              className="primary-button"
               onClick={handleSignIn}
+              style={{
+                marginTop: "24px",
+              }}
             >
               Sign In with Asgardeo
             </button>
           </section>
-        )}
+        </main>
       </div>
-    </main>
+    );
+  }
+
+  return (
+    <div className="app-shell">
+      <header className="app-header">
+        <div
+          className="brand"
+          role="button"
+          tabIndex={0}
+          onClick={() => navigateToPage("home")}
+          onKeyDown={(event) => {
+            if (
+              event.key === "Enter" ||
+              event.key === " "
+            ) {
+              navigateToPage("home");
+            }
+          }}
+          style={{ cursor: "pointer" }}
+        >
+          <div className="brand-icon">🐾</div>
+
+          <div className="brand-text">
+            <h1>Paws & Homes</h1>
+            <p>Helping pets find loving families</p>
+          </div>
+        </div>
+
+        <div className="header-actions">
+          {roles.length > 0 && (
+            <span className="role-badge">
+              {roles.join(", ")}
+            </span>
+          )}
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={handleSignOut}
+          >
+            Logout
+          </button>
+        </div>
+      </header>
+
+      <main className="app-main">
+        {authError && (
+          <div className="alert alert-error">
+            {authError}
+          </div>
+        )}
+
+        {currentPage === "home" &&
+          !showSettings && (
+            <HomePage
+              displayName={displayName}
+              roles={roles}
+              isAdopter={isAdopter}
+              isShelterStaff={isShelterStaff}
+              isAdmin={isAdmin}
+              onNavigate={navigateToPage}
+              onOpenSettings={openSettings}
+            />
+          )}
+
+        {currentPage === "browsePets" &&
+          !showSettings && (
+            <BrowsePetsPage
+              onBack={() =>
+                navigateToPage("home")
+              }
+              getAccessToken={getAccessToken}
+              isAdopter={isAdopter}
+            />
+          )}
+
+        {currentPage === "myApplications" &&
+          !showSettings && (
+            <MyApplicationsPage
+              onBack={() => setCurrentPage("home")}
+              getAccessToken={getAccessToken}
+              isAdopter={isAdopter}
+            />
+          )}
+
+        {currentPage === "addPet" &&
+          !showSettings && (
+            <AddPetPage
+              onBack={() =>
+                navigateToPage("home")
+              }
+              getAccessToken={getAccessToken}
+              isShelterStaff={isShelterStaff}
+            />
+          )}
+
+        {currentPage === "manageListings" &&
+          !showSettings && (
+            <ManageListingsPage
+              onBack={() =>
+                navigateToPage("home")
+              }
+              getAccessToken={getAccessToken}
+              isShelterStaff={isShelterStaff}
+            />
+          )}
+
+        {currentPage === "adminDashboard" &&
+          !showSettings && (
+            <AdminDashboardPage
+              onBack={() =>
+                navigateToPage("home")
+              }
+              getAccessToken={getAccessToken}
+              isAdmin={isAdmin}
+            />
+          )}
+
+        {showSettings && (
+          <ProfileSettingsPage
+            getAccessToken={getAccessToken}
+            onBack={closeSettings}
+          />
+        )}
+      </main>
+    </div>
   );
 }
 
