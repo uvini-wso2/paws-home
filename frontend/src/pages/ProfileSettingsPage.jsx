@@ -121,207 +121,285 @@ function ProfileSettingsPage({
     profile?.emailVerified ??
     profile?.active ??
     false;
+  
+  const fullName = 
+    `${formData.givenName || ""} ${
+      formData.familyName || ""
+    }`.trim();
 
+  const displayName =
+    fullName ||
+    profile?.displayName ||
+    profile?.userName ||
+    "User";
+
+  const initials =
+    (formData.givenName?.charAt(0) || "") +
+    (formData.familyName?.charAt(0) || "");
+
+  const profileInitials =
+    initials.length > 0
+      ? initials.toUpperCase()
+      : String(profile?.userName || "U")
+        .charAt(0)
+        .toUpperCase();
+    
     useEffect(() => {
-        loadProfile();
+      loadProfile();
     }, []);
 
   return (
-    <section
-      style={{
-        marginTop: "30px",
-        padding: "30px",
-        backgroundColor: "white",
-        borderRadius: "12px",
-      }}
-    >
-      <h2>Profile Settings</h2>
+    <section>
+      <div className="page-heading-row">
+        <div>
+          <p className="page-eyebrow">
+            Account management
+          </p>
 
-      {loadingProfile && <p>Loading profile...</p>}
+          <h2 className="page-title">
+            Profile Settings
+          </h2>
+
+          <p className="page-subtitle">
+            View and update your personal account information.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={onBack}
+        >
+          ← Back to Home
+        </button>
+      </div>
+
+      {loadingProfile && (
+        <div className="loading-state">
+          <div className="loading-spinner" />
+          <p>Loading profile...</p>
+        </div>
+      )}
 
       {profileError && (
-        <p style={{ color: "crimson" }}>
+        <div className="alert alert-error">
           {profileError}
-        </p>
+        </div>
       )}
 
       {successMessage && (
-        <p style={{ color: "green" }}>
+        <div className="alert alert-success">
           {successMessage}
-        </p>
+        </div>
       )}
 
       {profile && !loadingProfile && (
-        <form onSubmit={handleSave}>
-          <label
-            style={{
-              display: "block",
-              marginBottom: "16px",
-            }}
-          >
-            Username — read-only
+        <div className="profile-settings-layout">
+          <aside className="profile-summary-card">
+            <div className="profile-avatar">
+              {profileInitials}
+            </div>
 
-            <input
-              type="text"
-              value={profile.userName ?? ""}
-              disabled
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "10px",
-                marginTop: "6px",
-                boxSizing: "border-box",
-              }}
-            />
-          </label>
+            <h3>{displayName}</h3>
 
-          <label
-            style={{
-              display: "block",
-              marginBottom: "16px",
-            }}
-          >
-            First name
+            <p className="profile-summary-email">
+              {formData.email || "No email available"}
+            </p>
 
-            <input
-              type="text"
-              name="givenName"
-              value={formData.givenName}
-              onChange={handleInputChange}
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "10px",
-                marginTop: "6px",
-                boxSizing: "border-box",
-              }}
-            />
-          </label>
-
-          <label
-            style={{
-              display: "block",
-              marginBottom: "16px",
-            }}
-          >
-            Last name
-
-            <input
-              type="text"
-              name="familyName"
-              value={formData.familyName}
-              onChange={handleInputChange}
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "10px",
-                marginTop: "6px",
-                boxSizing: "border-box",
-              }}
-            />
-          </label>
-
-          <label
-            style={{
-              display: "block",
-              marginBottom: "16px",
-            }}
-          >
-            Email
-
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "10px",
-                marginTop: "6px",
-                boxSizing: "border-box",
-              }}
-            />
-          </label>
-
-          <label
-            style={{
-              display: "block",
-              marginBottom: "16px",
-            }}
-          >
-            Phone number
-
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              placeholder="+94 77 123 4567"
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "10px",
-                marginTop: "6px",
-                boxSizing: "border-box",
-              }}
-            />
-          </label>
-
-          <label
-            style={{
-              display: "block",
-              marginBottom: "16px",
-            }}
-          >
-            Home address — optional
-
-            <textarea
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              rows={3}
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "10px",
-                marginTop: "6px",
-                boxSizing: "border-box",
-              }}
-            />
-          </label>
-
-          <p>
-            <strong>Verification status:</strong>{" "}
-            {verificationStatus
-              ? "Verified / Active"
-              : "Not verified"}
-          </p>
-
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              marginTop: "20px",
-            }}
-          >
-            <button
-              type="submit"
-              disabled={savingProfile}
+            <span
+              className={`verification-badge ${
+                verificationStatus
+                  ? "verification-badge-active"
+                  : "verification-badge-inactive"
+              }`}
             >
-              {savingProfile
-                ? "Saving..."
-                : "Save Changes"}
-            </button>
+              <span className="verification-dot" />
 
-            <button
-              type="button"
-              onClick={onBack}
-            >
-              Back to Home
-            </button>
-          </div>
-        </form>
+              {verificationStatus
+                ? "Verified account"
+                : "Not verified"}
+            </span>
+
+            <div className="profile-account-details">
+              <div>
+                <span>Username</span>
+                <strong>
+                  {profile.userName || "Not available"}
+                </strong>
+              </div>
+
+              <div>
+                <span>Phone number</span>
+                <strong>
+                  {formData.phone || "Not provided"}
+                </strong>
+              </div>
+            </div>
+          </aside>
+
+          <form
+            className="page-card profile-form-card"
+            onSubmit={handleSave}
+          >
+            <div className="form-card-heading">
+              <span className="form-card-icon">
+                👤
+              </span>
+
+              <div>
+                <h3>Personal Information</h3>
+                <p>
+                  Keep your account information accurate and
+                  up to date.
+                </p>
+              </div>
+            </div>
+
+            <div className="form-grid">
+              <div className="form-group">
+                <label htmlFor="username">
+                  Username
+                </label>
+
+                <input
+                  id="username"
+                  type="text"
+                  value={profile.userName ?? ""}
+                  disabled
+                />
+
+                <small className="form-help-text">
+                  Your username is managed by Asgardeo and
+                  cannot be changed here.
+                </small>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="givenName">
+                    First name
+                  </label>
+
+                  <input
+                    id="givenName"
+                    type="text"
+                    name="givenName"
+                    value={formData.givenName}
+                    onChange={handleInputChange}
+                    placeholder="Enter your first name"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="familyName">
+                    Last name
+                  </label>
+
+                  <input
+                    id="familyName"
+                    type="text"
+                    name="familyName"
+                    value={formData.familyName}
+                    onChange={handleInputChange}
+                    placeholder="Enter your last name"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="email">
+                  Email address
+                </label>
+
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Enter your email address"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="phone">
+                  Phone number
+                </label>
+
+                <input
+                  id="phone"
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="+94 77 123 4567"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="address">
+                  Home address
+                  <span className="optional-label">
+                    Optional
+                  </span>
+                </label>
+
+                <textarea
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  rows={4}
+                  placeholder="Enter your home address"
+                />
+              </div>
+
+              <div className="profile-status-row">
+                <div>
+                  <span>Account status</span>
+                  <strong>
+                    {verificationStatus
+                      ? "Verified and active"
+                      : "Verification required"}
+                  </strong>
+                </div>
+
+                <span
+                  className={`status-indicator ${
+                    verificationStatus
+                      ? "status-indicator-active"
+                      : "status-indicator-inactive"
+                  }`}
+                >
+                  {verificationStatus
+                    ? "Active"
+                    : "Not verified"}
+                </span>
+              </div>
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="secondary-button"
+                  onClick={onBack}
+                  disabled={savingProfile}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="primary-button"
+                  disabled={savingProfile}
+                >
+                  {savingProfile
+                    ? "Saving..."
+                    : "Save Changes"}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
       )}
     </section>
   );

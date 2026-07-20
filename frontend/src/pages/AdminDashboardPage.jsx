@@ -116,19 +116,19 @@ function AdminDashboardPage({
 
   return (
     <section>
-      <div className="page-heading-row">
+      <div className="dashboard-hero">
         <div>
-          <p className="page-eyebrow">
-            Administration and monitoring
+          <p className="dashboard-eyebrow">
+            Administration
           </p>
 
-          <h2 className="page-title">
-            Admin Dashboard
+          <h2 className="dashboard-title">
+            🛡 Admin Dashboard
           </h2>
 
-          <p className="page-subtitle">
-            Review user roles, account status and
-            recent system activity.
+          <p className="dashboard-description">
+            Manage users, review account roles and monitor
+            system activity across the Paws and Homes platform.
           </p>
         </div>
 
@@ -207,8 +207,8 @@ function AdminDashboardPage({
               <div>
                 <h3>User Management</h3>
                 <p>
-                  Simulated user accounts and
-                  assigned roles.
+                  Demonstration user accounts and 
+                  assigned platform roles.
                 </p>
               </div>
 
