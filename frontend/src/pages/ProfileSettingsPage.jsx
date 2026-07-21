@@ -53,7 +53,9 @@ function ProfileSettingsPage({
       setFormData({
         givenName: data.name?.givenName ?? "",
         familyName: data.name?.familyName ?? "",
-        email: getValueFromArray(data.emails),
+        email: getValueFromArray(data.emails) ||
+          data.userName?.replace(/^DEFAULT\//, "") ||
+          "",
         phone: getValueFromArray(data.phoneNumbers),
         address:
           data.addresses?.[0]?.formatted ??
@@ -115,12 +117,6 @@ function ProfileSettingsPage({
       setSavingProfile(false);
     }
   };
-
-  const verificationStatus =
-    profile?.verified ??
-    profile?.emailVerified ??
-    profile?.active ??
-    false;
   
   const fullName = 
     `${formData.givenName || ""} ${
@@ -205,20 +201,6 @@ function ProfileSettingsPage({
             <p className="profile-summary-email">
               {formData.email || "No email available"}
             </p>
-
-            <span
-              className={`verification-badge ${
-                verificationStatus
-                  ? "verification-badge-active"
-                  : "verification-badge-inactive"
-              }`}
-            >
-              <span className="verification-dot" />
-
-              {verificationStatus
-                ? "Verified account"
-                : "Not verified"}
-            </span>
 
             <div className="profile-account-details">
               <div>
@@ -352,29 +334,6 @@ function ProfileSettingsPage({
                   rows={4}
                   placeholder="Enter your home address"
                 />
-              </div>
-
-              <div className="profile-status-row">
-                <div>
-                  <span>Account status</span>
-                  <strong>
-                    {verificationStatus
-                      ? "Verified and active"
-                      : "Verification required"}
-                  </strong>
-                </div>
-
-                <span
-                  className={`status-indicator ${
-                    verificationStatus
-                      ? "status-indicator-active"
-                      : "status-indicator-inactive"
-                  }`}
-                >
-                  {verificationStatus
-                    ? "Active"
-                    : "Not verified"}
-                </span>
               </div>
 
               <div className="form-actions">
