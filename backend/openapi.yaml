@@ -1,0 +1,75 @@
+openapi: 3.0.0
+
+info:
+  title: Paws and Homes API
+  version: 1.0.0
+  description: Backend API for the Paws and Homes pet adoption portal
+
+servers:
+  - url: /
+
+paths:
+  /:
+    get:
+      summary: Check backend status
+      responses:
+        "200":
+          description: Backend is running
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /api/message:
+    get:
+      summary: Get backend status message
+      responses:
+        "200":
+          description: Backend status message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /pets:
+    get:
+      summary: Retrieve all pets
+      responses:
+        "200":
+          description: Pet list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pet"
+
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Buddy
+        species:
+          type: string
+          example: Dog
+        breed:
+          type: string
+          example: Golden Retriever
+        age:
+          type: integer
+          example: 3
+        status:
+          type: string
+          example: Available
+        createdBy:
+          type: string
+          example: shelter.staff@example.com
