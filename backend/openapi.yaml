@@ -34,7 +34,7 @@ paths:
                   message:
                     type: string
 
-  /pets:
+  /api/pets:
     get:
       summary: Retrieve all pets
       responses:
@@ -47,13 +47,55 @@ paths:
                 items:
                   $ref: "#/components/schemas/Pet"
 
+    post:
+      summary: Create a new pet
+      responses:
+        "201":
+          description: Pet created successfully
+        "401":
+          description: Authentication required
+        "403":
+          description: Shelter Staff role required
+
+  /api/pets/mine:
+    get:
+      summary: Retrieve pets created by the logged-in shelter staff user
+      responses:
+        "200":
+          description: Staff pet listings retrieved successfully
+        "401":
+          description: Authentication required
+        "403":
+          description: Shelter Staff role required
+
+  /api/pets/{id}:
+    delete:
+      summary: Delete a pet listing
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Pet deleted successfully
+        "401":
+          description: Authentication required
+        "403":
+          description: Shelter Staff role required
+        "404":
+          description: Pet not found
+
 components:
   schemas:
     Pet:
       type: object
       properties:
         id:
-          type: integer
+          oneOf:
+            - type: integer
+            - type: string
           example: 1
         name:
           type: string
