@@ -1,5 +1,6 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3002";
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:3002/api";
 
 export const getPets = async (accessToken) => {
   const response = await fetch(`${API_BASE_URL}/pets`, {
