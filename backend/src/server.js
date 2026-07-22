@@ -15,7 +15,7 @@ app.use(
   applicationRoutes
 );
 
-app.use("/pets", petRoutes);
+app.use("/api/pets", petRoutes);
 
 app.use("/api/admin", adminRoutes);
 
