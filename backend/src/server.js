@@ -7,6 +7,10 @@ import adminRoutes from "./routes/adminRoutes.js";
 const app = express();
 const PORT = process.env.PORT || 3002;
 
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
 app.use(cors());
 app.use(express.json());
 
