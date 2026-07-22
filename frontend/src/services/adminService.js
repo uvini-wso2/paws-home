@@ -1,10 +1,9 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://676fd26f-fa41-4a71-bbc4-74d8adabaafb-dev.e1-us-east-azure.choreoapis.dev/paws-and-homes/paws-home-backend/v1.0/api";
-  
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3002";
+
 export const getUsers = async (accessToken) => {
   const response = await fetch(
-    `${API_BASE_URL}/admin/users`,
+    `${API_BASE_URL}/api/admin/users`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -23,7 +22,7 @@ export const getUsers = async (accessToken) => {
 
 export const getAuditLogs = async (accessToken) => {
   const response = await fetch(
-    `${API_BASE_URL}/admin/audit`,
+    `${API_BASE_URL}/api/admin/audit`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,

@@ -1,9 +1,8 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://676fd26f-fa41-4a71-bbc4-74d8adabaafb-dev.e1-us-east-azure.choreoapis.dev/paws-and-homes/paws-home-backend/v1.0/api";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3002";
 
 export const getPets = async (accessToken) => {
-  const response = await fetch(`${API_BASE_URL}/pets`, {
+  const response = await fetch(`${API_BASE_URL}/api/pets`, {
     method: "GET",
     headers: {
       Accept: "application/json",
@@ -21,7 +20,7 @@ export const getPets = async (accessToken) => {
 };
 
 export const createPet = async (petData, accessToken) => {
-  const response = await fetch(`${API_BASE_URL}/pets`, {
+  const response = await fetch(`${API_BASE_URL}/api/pets`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -43,7 +42,7 @@ export const createPet = async (petData, accessToken) => {
 };
 
 export const getMyPets = async (accessToken) => {
-  const response = await fetch(`${API_BASE_URL}/pets/mine`, {
+  const response = await fetch(`${API_BASE_URL}/api/pets/mine`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -59,7 +58,7 @@ export const getMyPets = async (accessToken) => {
 };
 
 export const deletePet = async (id, accessToken) => {
-  const response = await fetch(`${API_BASE_URL}/pets/${id}`, {
+  const response = await fetch(`${API_BASE_URL}/api/pets/${id}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${accessToken}`,

@@ -5,7 +5,7 @@ import applicationRoutes from "./routes/applicationRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = 3002;
 
 app.use(cors());
 app.use(express.json());
