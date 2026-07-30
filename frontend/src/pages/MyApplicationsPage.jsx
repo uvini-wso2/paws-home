@@ -180,7 +180,7 @@ function MyApplicationsPage({
                   </div>
 
                   <div className="application-card-body">
-                    <h3>{application.petName}</h3>
+                    <h3>{application.name}</h3>
 
                     <p className="application-breed">
                       {application.breed ||
@@ -201,8 +201,10 @@ function MyApplicationsPage({
                         <span>Applied On</span>
 
                         <strong>
-                          {application.appliedDate ||
-                            "Not available"}
+                          {application.createdAt
+                           ? new Date(application.createdAt).toLocaleDateString()
+                           : "Not available"}
+                           
                         </strong>
                       </div>
 
@@ -210,9 +212,18 @@ function MyApplicationsPage({
                         <span>Application ID</span>
 
                         <strong>
-                          #{application.id}
+                          {application.id ? `#${application.id}` : "N/A"}
                         </strong>
                       </div>
+                    </div>
+
+                    <div className="application-detail-item">
+                      <span>Age</span>
+                        <strong>
+                          {application.age
+                            ? `${application.age} years`
+                            : "Not specified"}
+                        </strong>
                     </div>
 
                     <div className="application-status-message">

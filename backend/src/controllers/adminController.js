@@ -1,28 +1,49 @@
-import users from "../data/users.js";
-import { getAuditLogs } from "../services/auditService.js";
+import { db } from "../config/db.js";
 
-export const getUsers = (req, res) => {
+/**
+ * GET ALL USERS
+ * Reads from users table (NOT applications)
+ */
+export const getUsers = async (req, res) => {
   try {
-    return res.status(200).json(users);
-  } catch (error) {
-    console.error("Failed to retrieve users:", error);
+    const [rows] = await db.execute(`
+      SELECT 
+        email,
+        role,
+        status
+      FROM users
+    `);
 
-    return res.status(500).json({
-      message: "Unable to retrieve users.",
-    });
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ message: err.message });
   }
 };
 
-export const getAuditActivity = (req, res) => {
+/**
+ * GET AUDIT LOGS
+ * Using applications as audit activity
+ */
+export const getAuditLogs = async (req, res) => {
   try {
-    const auditLogs = getAuditLogs();
+    const [rows] = await db.execute(`
+      SELECT 
+        a.id,
+        a.userEmail,
+        'Applied for adoption' AS action,
+        a.status,
+        a.createdAt,
+        p.name AS petName,
+        p.species
+      FROM applications a
+      JOIN pets p ON a.petId = p.id
+      ORDER BY a.createdAt DESC
+    `);
 
-    return res.status(200).json(auditLogs);
-  } catch (error) {
-    console.error("Failed to retrieve audit logs:", error);
-
-    return res.status(500).json({
-      message: "Unable to retrieve audit activity.",
-    });
+    res.json(rows);
+  } catch (err) {
+    console.error("Error fetching audit logs:", err);
+    res.status(500).json({ message: err.message });
   }
 };

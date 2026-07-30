@@ -104,9 +104,11 @@ function ManageListingsPage({
   };
 
   const getStatusClassName = (status) => {
-    const normalizedStatus = String(
-      status || ""
-    ).toLowerCase();
+    const normalizedStatus = String(status || "").toLowerCase();
+
+    if (normalizedStatus.includes("unavailable")) {
+      return "pet-status pet-status-unavailable";
+    }
 
     if (
       normalizedStatus.includes("available") ||

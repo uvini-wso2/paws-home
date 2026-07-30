@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { getPets } from "../services/petService";
 import AccessDenied from "../components/AccessDenied";
-import { createApplication } from "../services/applicationService";
+import {
+  createApplication,
+  getMyApplications,
+} from "../services/applicationService";
 
 function BrowsePetsPage({
   onBack,
@@ -18,16 +21,31 @@ function BrowsePetsPage({
   const [applicationError, setApplicationError] =
     useState("");
 
+  const [appliedPetIds, setAppliedPetIds] = useState([]);
+
+  // ✅ FIXED useEffect
   useEffect(() => {
-    const loadPets = async () => {
+    const loadData = async () => {
       try {
         setLoadingPets(true);
         setPetsError("");
 
         const accessToken = await getAccessToken();
-        const petData = await getPets(accessToken);
 
+        // Load pets
+        const petData = await getPets(accessToken);
         setPets(petData);
+
+        // Load applications
+        const applications = await getMyApplications(
+          accessToken
+        );
+
+        const appliedIds = applications.map(
+          (app) => app.petId
+        );
+
+        setAppliedPetIds(appliedIds);
       } catch (error) {
         console.error("Failed to load pets:", error);
 
@@ -41,7 +59,7 @@ function BrowsePetsPage({
       }
     };
 
-    loadPets();
+    loadData(); // ✅ FIXED (was loadPets ❌)
   }, [getAccessToken]);
 
   const handleApply = async (pet) => {
@@ -53,6 +71,9 @@ function BrowsePetsPage({
       const accessToken = await getAccessToken();
 
       await createApplication(pet.id, accessToken);
+
+      // ✅ update UI immediately
+      setAppliedPetIds((prev) => [...prev, pet.id]);
 
       setApplicationMessage(
         `Your adoption application for ${pet.name} was submitted successfully.`
@@ -79,17 +100,9 @@ function BrowsePetsPage({
       species || ""
     ).toLowerCase();
 
-    if (normalizedSpecies.includes("cat")) {
-      return "🐱";
-    }
-
-    if (normalizedSpecies.includes("rabbit")) {
-      return "🐰";
-    }
-
-    if (normalizedSpecies.includes("bird")) {
-      return "🐦";
-    }
+    if (normalizedSpecies.includes("cat")) return "🐱";
+    if (normalizedSpecies.includes("rabbit")) return "🐰";
+    if (normalizedSpecies.includes("bird")) return "🐦";
 
     return "🐶";
   };
@@ -146,7 +159,6 @@ function BrowsePetsPage({
       {loadingPets && (
         <div className="loading-state">
           <div className="loading-spinner" />
-
           <p>Loading available pets...</p>
         </div>
       )}
@@ -174,9 +186,7 @@ function BrowsePetsPage({
         pets.length === 0 && (
           <div className="empty-state">
             <div className="empty-state-icon">🐾</div>
-
             <h3>No pets available yet</h3>
-
             <p>
               Please check again later for new adoption
               listings.
@@ -191,79 +201,98 @@ function BrowsePetsPage({
             <div className="results-summary">
               <span>
                 {pets.length}{" "}
-                {pets.length === 1 ? "pet" : "pets"} found
+                {pets.length === 1
+                  ? "pet"
+                  : "pets"}{" "}
+                found
               </span>
             </div>
 
             <div className="pet-grid">
-              {pets.map((pet) => (
-                <article
-                  key={pet.id}
-                  className="pet-card"
-                >
-                  <div className="pet-card-visual">
-                    <span className="pet-card-emoji">
-                      {getPetEmoji(pet.species)}
-                    </span>
+              {pets.map((pet) => {
+                // ✅ IMPORTANT FIX
+                const hasApplied =
+                  appliedPetIds.includes(pet.id);
 
-                    <span
-                      className={getStatusClassName(
-                        pet.status
-                      )}
-                    >
-                      {pet.status || "Available"}
-                    </span>
-                  </div>
+                return (
+                  <article
+                    key={pet.id}
+                    className="pet-card"
+                  >
+                    <div className="pet-card-visual">
+                      <span className="pet-card-emoji">
+                        {getPetEmoji(pet.species)}
+                      </span>
 
-                  <div className="pet-card-body">
-                    <div className="pet-card-heading">
-                      <div>
-                        <h3>{pet.name}</h3>
-
-                        <p>
-                          {pet.breed ||
-                            "Breed not specified"}
-                        </p>
-                      </div>
+                      <span
+                        className={getStatusClassName(
+                          pet.status
+                        )}
+                      >
+                        {pet.status || "Available"}
+                      </span>
                     </div>
 
-                    <div className="pet-details">
-                      <div className="pet-detail-item">
-                        <span>Species</span>
-                        <strong>
-                          {pet.species ||
-                            "Not specified"}
-                        </strong>
+                    <div className="pet-card-body">
+                      <div className="pet-card-heading">
+                        <div>
+                          <h3>{pet.name}</h3>
+
+                          <p>
+                            {pet.breed ||
+                              "Breed not specified"}
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="pet-detail-item">
-                        <span>Age</span>
-                        <strong>
-                          {pet.age
-                            ? `${pet.age} ${
-                                Number(pet.age) === 1
-                                  ? "year"
-                                  : "years"
-                              }`
-                            : "Not specified"}
-                        </strong>
+                      <div className="pet-details">
+                        <div className="pet-detail-item">
+                          <span>Species</span>
+                          <strong>
+                            {pet.species ||
+                              "Not specified"}
+                          </strong>
+                        </div>
+
+                        <div className="pet-detail-item">
+                          <span>Age</span>
+                          <strong>
+                            {pet.age
+                              ? `${pet.age} ${
+                                  Number(pet.age) === 1
+                                    ? "year"
+                                    : "years"
+                                }`
+                              : "Not specified"}
+                          </strong>
+                        </div>
                       </div>
+
+                      <button
+                        type="button"
+                        className={`primary-button pet-card-action ${
+                          hasApplied
+                            ? "disabled-button"
+                            : ""
+                        }`}
+                        onClick={() =>
+                          handleApply(pet)
+                        }
+                        disabled={
+                          applyingPetId === pet.id ||
+                          hasApplied
+                        }
+                      >
+                        {applyingPetId === pet.id
+                          ? "Submitting..."
+                          : hasApplied
+                          ? "Already Applied"
+                          : "Apply to Adopt"}
+                      </button>
                     </div>
-
-                    <button
-                      type="button"
-                      className="primary-button pet-card-action"
-                      onClick={() => handleApply(pet)}
-                      disabled={applyingPetId === pet.id}
-                    >
-
-                      {applyingPetId === pet.id
-                        ? "Submitting..."
-                        : "Apply to Adopt"}
-                    </button>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           </>
         )}

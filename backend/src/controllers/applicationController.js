@@ -1,63 +1,89 @@
 import { applications } from "../data/applications.js";
 import pets  from "../data/pets.js";
 import { addAuditLog } from "../services/auditService.js";
+import { db } from "../config/db.js";
 
-export const createApplication = (req, res) => {
-  const { petId } = req.body;
+export const createApplication = async (req, res) => {
+  try {
+    const { petId } = req.body;
+    const userEmail = req.user.email || req.user.sub;
 
-  const pet = pets.find(
-    (item) => item.id === Number(petId)
-  );
+    const [existing] = await db.execute(
+      "SELECT * FROM applications WHERE petId = ? AND userEmail = ?",
+      [petId, userEmail]
+    );
 
-  if (!pet) {
-    return res.status(404).json({
-      message: "Pet not found.",
-    });
+    if (existing.length > 0) {
+      return res.status(400).json({
+        message: "You have already applied for this pet"
+      });
+    }
+
+    await db.execute(
+      "INSERT INTO applications (petId, userEmail, status) VALUES (?, ?, ?)",
+      [petId, userEmail, "Pending"]
+    );
+
+    res.json({ message: "Application submitted" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
-
-  const existing = applications.find(
-    (application) =>
-      application.petId === Number(petId) &&
-      application.userId === req.user.sub
-  );
-
-  if (existing) {
-    return res.status(400).json({
-      message:
-        "You have already applied for this pet.",
-    });
-  }
-
-  const application = {
-    id: applications.length + 1,
-    petId: pet.id,
-    petName: pet.name,
-    breed: pet.breed,
-    species: pet.species,
-    status: "Pending",
-    appliedDate: new Date().toLocaleDateString(),
-    userId: req.user.sub,
-  };
-
-  applications.push(application);
-
-  addAuditLog({
-    action: `Applied to adopt ${pet.name}`,
-    actor: req.user.username || req.user.sub,
-    category: "Adoption",
-  });
-
-  res.status(201).json({
-    message: "Application submitted successfully.",
-    application,
-  });
 };
 
-export const getMyApplications = (req, res) => {
-  const myApplications = applications.filter(
-    (application) =>
-      application.userId === req.user.sub
-  );
+export const getMyApplications = async (req, res) => {
+  try {
+    const userEmail = req.user.email || req.user.sub;
 
-  res.json(myApplications);
+    const [rows] = await db.execute(`
+      SELECT 
+        a.id AS applicationId,
+        a.status,
+        a.createdAt,
+        p.name,
+        p.species,
+        p.breed,
+        p.age
+      FROM applications a
+      JOIN pets p ON a.petId = p.id
+      WHERE a.userEmail = ?
+    `, [userEmail]);
+
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const updateApplicationStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // 1. Update application status
+    await db.execute(
+      "UPDATE applications SET status = ? WHERE id = ?",
+      [status, id]
+    );
+
+    // 2. If approved → mark pet as unavailable
+    if (status === "Approved") {
+      const [rows] = await db.execute(
+        "SELECT petId FROM applications WHERE id = ?",
+        [id]
+      );
+
+      const petId = rows[0].petId;
+
+      await db.execute(
+        "UPDATE pets SET status = 'Unavailable' WHERE id = ?",
+        [petId]
+      );
+    }
+
+    res.json({ message: "Updated successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
 };

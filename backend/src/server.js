@@ -3,6 +3,7 @@ import cors from "cors";
 import petRoutes from "./routes/petRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import { db } from "./config/db.js";
 
 const app = express();
 const PORT = 3002;

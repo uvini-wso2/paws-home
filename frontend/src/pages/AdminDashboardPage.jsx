@@ -3,6 +3,7 @@ import {
   getUsers,
   getAuditLogs,
 } from "../services/adminService";
+import { updateApplicationStatus } from "../services/applicationService";
 import AccessDenied from "../components/AccessDenied";
 
 function AdminDashboardPage({
@@ -22,8 +23,7 @@ function AdminDashboardPage({
         setLoading(true);
         setDashboardError("");
 
-        const accessToken =
-          await getAccessToken();
+        const accessToken = await getAccessToken();
 
         const [userData, auditData] =
           await Promise.all([
@@ -54,64 +54,51 @@ function AdminDashboardPage({
     }
   }, [getAccessToken, isAdmin]);
 
+  const handleStatusUpdate = async (id, status) => {
+    console.log("CLICKED", id, status);
+
+    try {
+      const token = await getAccessToken();
+
+      await updateApplicationStatus(id, status, token);
+
+      // refresh logs after update
+      const updatedLogs = await getAuditLogs(token);
+      setAuditLogs(updatedLogs);
+      
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    }
+  };
+
   if (!isAdmin) {
     return <AccessDenied onBack={onBack} />;
   }
 
-  const adopterCount = users.filter((user) =>
-    user.roles?.includes("Adopter")
+  const adopterCount = users.filter(
+    (user) => user.role === "Adopter"
   ).length;
 
-  const shelterStaffCount = users.filter((user) =>
-    user.roles?.includes("Shelter Staff")
+  const shelterStaffCount = users.filter(
+    (user) => user.role === "Shelter Staff"
   ).length;
 
-  const adminCount = users.filter((user) =>
-    user.roles?.includes("Admin")
+  const adminCount = users.filter(
+    (user) => user.role === "Admin"
   ).length;
 
   const getRoleClassName = (role) => {
-    const normalizedRole = String(
-      role || ""
-    ).toLowerCase();
+    const normalizedRole = String(role || "").toLowerCase();
 
     if (normalizedRole.includes("admin")) {
       return "admin-role-badge admin-role-admin";
     }
 
-    if (
-      normalizedRole.includes("shelter")
-    ) {
+    if (normalizedRole.includes("shelter")) {
       return "admin-role-badge admin-role-staff";
     }
 
     return "admin-role-badge admin-role-adopter";
-  };
-
-  const getAuditIcon = (category) => {
-    const normalizedCategory = String(
-      category || ""
-    ).toLowerCase();
-
-    if (
-      normalizedCategory.includes("pet")
-    ) {
-      return "🐾";
-    }
-
-    if (
-      normalizedCategory.includes("adoption")
-    ) {
-      return "📋";
-    }
-
-    if (
-      normalizedCategory.includes("auth")
-    ) {
-      return "🔐";
-    }
-
-    return "📝";
   };
 
   return (
@@ -127,8 +114,7 @@ function AdminDashboardPage({
           </h2>
 
           <p className="dashboard-description">
-            Manage users, review account roles and monitor
-            system activity across the Paws and Homes platform.
+            Manage users and monitor system activity.
           </p>
         </div>
 
@@ -156,204 +142,126 @@ function AdminDashboardPage({
 
       {!loading && !dashboardError && (
         <>
+          {/* SUMMARY */}
           <div className="admin-summary-grid">
             <article className="admin-summary-card">
-              <span className="admin-summary-icon">
-                👥
-              </span>
-
-              <div>
-                <p>Total Users</p>
-                <strong>{users.length}</strong>
-              </div>
+              👥 <strong>{users.length}</strong>
+              <p>Total Users</p>
             </article>
 
             <article className="admin-summary-card">
-              <span className="admin-summary-icon">
-                🏠
-              </span>
-
-              <div>
-                <p>Adopters</p>
-                <strong>{adopterCount}</strong>
-              </div>
+              🏠 <strong>{adopterCount}</strong>
+              <p>Adopters</p>
             </article>
 
             <article className="admin-summary-card">
-              <span className="admin-summary-icon">
-                🐾
-              </span>
-
-              <div>
-                <p>Shelter Staff</p>
-                <strong>{shelterStaffCount}</strong>
-              </div>
+              🐾 <strong>{shelterStaffCount}</strong>
+              <p>Shelter Staff</p>
             </article>
 
             <article className="admin-summary-card">
-              <span className="admin-summary-icon">
-                🛡️
-              </span>
-
-              <div>
-                <p>Administrators</p>
-                <strong>{adminCount}</strong>
-              </div>
+              🛡 <strong>{adminCount}</strong>
+              <p>Admins</p>
             </article>
           </div>
 
+          {/* USERS TABLE */}
           <div className="admin-section">
-            <div className="admin-section-heading">
-              <div>
-                <h3>User Management</h3>
-                <p>
-                  Demonstration user accounts and 
-                  assigned platform roles.
-                </p>
-              </div>
+            <h3>User Management</h3>
 
-              <span className="results-summary">
-                {users.length} users
-              </span>
-            </div>
+            <table className="admin-user-table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
 
-            {users.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">
-                  👥
-                </div>
-                <h3>No users found</h3>
-                <p>
-                  User records are not available.
-                </p>
-              </div>
-            ) : (
-              <div className="admin-table-wrapper">
-                <table className="admin-user-table">
-                  <thead>
-                    <tr>
-                      <th>User</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
+              <tbody>
+                {users.map((user, index) => (
+                  <tr key={index}>
+                    <td>{user.userEmail || user.email}</td>
 
-                  <tbody>
-                    {users.map((user) => (
-                      <tr key={user.id}>
-                        <td>
-                          <div className="admin-user-cell">
-                            <span className="admin-user-avatar">
-                              {String(
-                                user.name || "U"
-                              )
-                                .charAt(0)
-                                .toUpperCase()}
-                            </span>
+                    <td>
+                      <span
+                        className={getRoleClassName(user.role)}
+                      >
+                        {user.role || "User"}
+                      </span>
+                    </td>
 
-                            <strong>
-                              {user.name}
-                            </strong>
-                          </div>
-                        </td>
-
-                        <td>{user.email}</td>
-
-                        <td>
-                          <div className="admin-role-list">
-                            {(user.roles || []).map(
-                              (role) => (
-                                <span
-                                  key={role}
-                                  className={getRoleClassName(
-                                    role
-                                  )}
-                                >
-                                  {role}
-                                </span>
-                              )
-                            )}
-                          </div>
-                        </td>
-
-                        <td>
-                          <span className="admin-status-active">
-                            ●{" "}
-                            {user.status ||
-                              "Active"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    <td>{user.status || "Active"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
+          {/* AUDIT LOGS */}
           <div className="admin-section">
-            <div className="admin-section-heading">
-              <div>
-                <h3>Recent Audit Activity</h3>
-                <p>
-                  Live actions recorded during this
-                  server session.
-                </p>
-              </div>
-
-              <span className="results-summary">
-                {auditLogs.length} events
-              </span>
-            </div>
+            <h3>Recent Audit Activity</h3>
 
             {auditLogs.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon">
-                  📝
-                </div>
-
-                <h3>No audit activity yet</h3>
-
-                <p>
-                  Pet creation, deletion and adoption
-                  activity will appear here.
-                </p>
-              </div>
+              <p>No activity yet</p>
             ) : (
-              <div className="audit-list">
-                {auditLogs.map((log) => (
-                  <article
-                    key={log.id}
-                    className="audit-item"
-                  >
-                    <span className="audit-item-icon">
-                      {getAuditIcon(log.category)}
-                    </span>
+              auditLogs.map((log) => {
+                const dateObj = new Date(log.createdAt);
 
-                    <div className="audit-item-content">
-                      <div className="audit-item-heading">
-                        <strong>
-                          {log.action}
-                        </strong>
+                return (
+                  <div key={log.id} className="audit-item">
+                    <strong>
+                      {log.status} - {log.name}
+                    </strong>
 
-                        <span>
-                          {log.date} · {log.time}
-                        </span>
-                      </div>
+                    <p>
+                      Performed by{" "}
+                      <strong>
+                        {log.userEmail || "Unknown"}
+                      </strong>
+                    </p>
 
-                      <p>
-                        Performed by{" "}
-                        <strong>{log.actor}</strong>
-                      </p>
+                    <small>
+                      {dateObj.toLocaleDateString()}{" "}
+                      {dateObj.toLocaleTimeString()}
+                    </small>
 
-                      <span className="audit-category">
-                        {log.category}
-                      </span>
+                    {/* 🔥 ACTION BUTTONS */}
+                    <div style={{ marginTop: "10px" }}>
+                      <button
+                        className="primary-button"
+                        onClick={() =>
+                          handleStatusUpdate(
+                            log.id,
+                            "Approved"
+                          )
+                        }
+                        disabled={
+                          log.status === "Approved"
+                        }
+                      >
+                        Approve
+                      </button>
+
+                      <button
+                        className="secondary-button"
+                        style={{ marginLeft: "10px" }}
+                        onClick={() =>
+                          handleStatusUpdate(
+                            log.id,
+                            "Rejected"
+                          )
+                        }
+                        disabled={
+                          log.status === "Rejected"
+                        }
+                      >
+                        Reject
+                      </button>
                     </div>
-                  </article>
-                ))}
-              </div>
+                  </div>
+                );
+              })
             )}
           </div>
         </>

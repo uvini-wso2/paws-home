@@ -804,6 +804,12 @@
   margin-top: 20px;
 }
 
+.pet-status-unavailable {
+  background-color: #f3f4f6;
+  color: #EF4444;
+  border: 1px solid #d1d5db;
+}
+
 @media (max-width: 700px) {
   .listing-summary {
     align-items: flex-start;

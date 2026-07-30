@@ -35,3 +35,20 @@ export const getMyApplications = async (accessToken) => {
 
   return data;
 };
+
+export const updateApplicationStatus = async (id, status, token) => {
+  const res = await fetch(`http://localhost:3002/api/applications/${id}/status`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update status");
+  }
+
+  return res.json();
+};

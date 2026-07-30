@@ -2,11 +2,12 @@ import express from "express";
 
 import {
   getUsers,
-  getAuditActivity,
+  getAuditLogs,
 } from "../controllers/adminController.js";
 
 import { requireAuth } from "../middleware/authMiddleware.js";
 import { requireAdmin } from "../middleware/roleMiddleware.js";
+import { updateApplicationStatus } from "../controllers/applicationController.js";
 
 const router = express.Router();
 
@@ -21,7 +22,14 @@ router.get(
   "/audit",
   requireAuth,
   requireAdmin,
-  getAuditActivity
+  getAuditLogs
+);
+
+router.put(
+  "/:id/status",
+  requireAuth,
+  requireAdmin,
+  updateApplicationStatus
 );
 
 export default router;
