@@ -1,4 +1,4 @@
-import { db } from "../config/db.js";
+import { getDB } from "../config/db.js";
 
 /**
  * GET ALL USERS
@@ -27,6 +27,13 @@ export const getUsers = async (req, res) => {
  */
 export const getAuditLogs = async (req, res) => {
   try {
+
+    const db = await getDB();
+
+    if (!db) {
+      return res.status(500).json({ message: "DB not connected" });
+    }
+    
     const [rows] = await db.execute(`
       SELECT 
         a.id,

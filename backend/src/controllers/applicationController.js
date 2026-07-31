@@ -1,12 +1,18 @@
 import { applications } from "../data/applications.js";
 import pets  from "../data/pets.js";
 import { addAuditLog } from "../services/auditService.js";
-import { db } from "../config/db.js";
+import { getDB } from "../config/db.js";
 
 export const createApplication = async (req, res) => {
   try {
     const { petId } = req.body;
     const userEmail = req.user.email || req.user.sub;
+
+    const db = await getDB();
+
+    if (!db) {
+      return res.status(500).json({ message: "DB not connected" });
+    }
 
     const [existing] = await db.execute(
       "SELECT * FROM applications WHERE petId = ? AND userEmail = ?",
@@ -34,6 +40,12 @@ export const getMyApplications = async (req, res) => {
   try {
     const userEmail = req.user.email || req.user.sub;
 
+    const db = await getDB();
+
+    if (!db) {
+      return res.status(500).json({ message: "DB not connected" });
+    }
+
     const [rows] = await db.execute(`
       SELECT 
         a.id AS applicationId,
@@ -59,6 +71,12 @@ export const updateApplicationStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    const db = await getDB();
+
+    if (!db) {
+      return res.status(500).json({ message: "DB not connected" });
+    }
+
     // 1. Update application status
     await db.execute(
       "UPDATE applications SET status = ? WHERE id = ?",
@@ -73,6 +91,12 @@ export const updateApplicationStatus = async (req, res) => {
       );
 
       const petId = rows[0].petId;
+
+      const db = await getDB();
+
+      if (!db) {
+        return res.status(500).json({ message: "DB not connected" });
+      }
 
       await db.execute(
         "UPDATE pets SET status = 'Unavailable' WHERE id = ?",
