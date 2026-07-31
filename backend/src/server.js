@@ -8,7 +8,13 @@ import { getDB } from "./config/db.js";
 const app = express();
 const PORT = 3002;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*", 
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 
 app.use("/api/applications", applicationRoutes);

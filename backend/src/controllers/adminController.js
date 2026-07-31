@@ -6,6 +6,13 @@ import { getDB } from "../config/db.js";
  */
 export const getUsers = async (req, res) => {
   try {
+
+    const db = await getDB();
+
+    if (!db) {
+      return res.status(500).json({ message: "DB not connected" });
+    }
+
     const [rows] = await db.execute(`
       SELECT 
         email,
@@ -33,7 +40,7 @@ export const getAuditLogs = async (req, res) => {
     if (!db) {
       return res.status(500).json({ message: "DB not connected" });
     }
-    
+
     const [rows] = await db.execute(`
       SELECT 
         a.id,
