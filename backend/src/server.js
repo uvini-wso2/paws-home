@@ -58,18 +58,17 @@ app.use((err, req, res, next) => {
 // ✅ START SERVER ONLY AFTER DB CONNECTS
 const startServer = async () => {
   try {
-    console.log("🔌 Connecting to DB...");
+    console.log("🔌 Trying DB connection...");
     await getDB();
-    console.log("✅ DB Connected successfully");
-
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
-
+    console.log("✅ DB connected");
   } catch (error) {
-    console.error("❌ Failed to start server:", error.message);
-    process.exit(1); // 🚨 Required for Choreo to detect failure
+    console.error("⚠️ DB failed, but server will still run:", error.message);
   }
+
+  // 🚀 ALWAYS START SERVER
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Server running on ${PORT}`);
+  });
 };
 
 startServer();
