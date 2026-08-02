@@ -34,6 +34,7 @@ paths:
                   message:
                     type: string
 
+  # ================= PET ROUTES =================
   /api/pets:
     get:
       summary: Retrieve all pets
@@ -86,6 +87,44 @@ paths:
           description: Shelter Staff role required
         "404":
           description: Pet not found
+
+  # ================= APPLICATION ROUTES (FIX) =================
+  /api/applications:
+    post:
+      summary: Create a new application
+      responses:
+        "201":
+          description: Application created successfully
+        "401":
+          description: Authentication required
+
+  /api/applications/mine:
+    get:
+      summary: Get applications of logged-in user
+      responses:
+        "200":
+          description: Applications retrieved successfully
+        "401":
+          description: Authentication required
+
+  /api/applications/{id}/status:
+    put:
+      summary: Update application status (Admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Status updated successfully
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+        "404":
+          description: Application not found
 
 components:
   schemas:
