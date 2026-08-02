@@ -19,9 +19,6 @@ app.use(
   })
 );
 
-// ✅ Handle preflight requests (VERY IMPORTANT for CORS)
-app.options("*", cors());
-
 // ✅ Parse JSON
 app.use(express.json());
 
@@ -39,6 +36,11 @@ app.get("/api/message", (req, res) => {
   res.json({
     message: "Paws Home Backend Running!",
   });
+});
+
+app.use((req, res, next) => {
+  console.log(`➡️ ${req.method} ${req.url}`);
+  next();
 });
 
 // ✅ ROUTES
