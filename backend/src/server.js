@@ -10,56 +10,42 @@ import { getDB } from "./config/db.js";
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-// ✅ IMPORTANT: base path for Choreo
-const BASE_PATH = process.env.BASE_PATH || "";
-
-// ✅ CORS
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
-
+app.use(cors());
 app.use(express.json());
 
-// ✅ DEBUG ROUTE
-app.get(`${BASE_PATH}/test`, (req, res) => {
-  res.json({ message: "✅ Test route working" });
+// ✅ TEST ROUTE
+app.get("/test", (req, res) => {
+  res.json({ message: "TEST WORKING" });
 });
 
-// ✅ HEALTH
-app.get(`${BASE_PATH}/`, (req, res) => {
-  res.send("Backend is Running!");
-});
+// ✅ BASIC ROUTES
+app.use("/api/pets", petRoutes);
+app.use("/api/applications", applicationRoutes);
+app.use("/api/admin", adminRoutes);
 
-app.get(`${BASE_PATH}/api/message`, (req, res) => {
-  res.json({ message: "Paws Home Backend Running!" });
+// ✅ SAFE 404 HANDLER
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
 });
-
-// ✅ ROUTES
-app.use(`${BASE_PATH}/api/pets`, petRoutes);
-app.use(`${BASE_PATH}/api/applications`, applicationRoutes);
-app.use(`${BASE_PATH}/api/admin`, adminRoutes);
 
 // ✅ ERROR HANDLER
 app.use((err, req, res, next) => {
-  console.error("🔥 Server Error:", err);
-  res.status(500).json({ message: "Internal server error" });
+  console.error("ERROR:", err);
+  res.status(500).json({ message: "Server error" });
 });
 
-// ✅ START SERVER
-const startServer = async () => {
+// ✅ START
+const start = async () => {
   try {
-    console.log("🔌 Connecting DB...");
     await getDB();
-    console.log("✅ DB connected");
-  } catch (err) {
-    console.error("⚠️ DB failed:", err.message);
+    console.log("DB connected");
+  } catch (e) {
+    console.log("DB failed (still starting)");
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Server running on ${PORT}`);
+  app.listen(PORT, () => {
+    console.log("Server running on", PORT);
   });
 };
 
-startServer();
+start();
