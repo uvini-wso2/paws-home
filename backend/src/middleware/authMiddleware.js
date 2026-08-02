@@ -34,7 +34,17 @@ export const requireAuth = async (req, res, next) => {
       issuer: `${ASGARDEO_BASE_URL}/oauth2/token`,
     });
 
-    req.user = payload;
+    // 🔥 DEBUG (VERY IMPORTANT)
+    console.log("JWT PAYLOAD:", payload);
+
+    req.user = {
+      email:
+        payload.email ||
+        payload.username ||
+        payload.sub, // fallback
+    };
+
+    console.log("REQ.USER:", req.user);
 
     next();
   } catch (error) {
