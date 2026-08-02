@@ -5,12 +5,11 @@ export const createApplication = async (req, res) => {
   try {
     const { petId } = req.body;
 
-    // ✅ Use email consistently
-    const userEmail = req.user?.email || req.user?.sub;
+    const userId = req.user?.sub;
 
-    if (!userEmail) {
+    if (!userId) {
       return res.status(400).json({
-        message: "User email not found in token"
+        message: "User ID not found in token"
       });
     }
 
@@ -20,28 +19,28 @@ export const createApplication = async (req, res) => {
       return res.status(500).json({ message: "DB not connected" });
     }
 
-    // ✅ Check if already applied
+    // ✅ Check duplicate
     const [existing] = await db.execute(
-      "SELECT * FROM applications WHERE petId = ? AND userEmail = ?",
-      [petId, userEmail]
+      "SELECT * FROM applications WHERE petId = ? AND userId = ?",
+      [petId, userId]
     );
 
     if (existing.length > 0) {
       return res.status(400).json({
-        message: "You have already applied for this pet"
+        message: "You already applied for this pet"
       });
     }
 
-    // ✅ Insert application
+    // ✅ Insert
     await db.execute(
-      "INSERT INTO applications (petId, userEmail, status) VALUES (?, ?, ?)",
-      [petId, userEmail, "Pending"]
+      "INSERT INTO applications (petId, userId, status) VALUES (?, ?, ?)",
+      [petId, userId, "Pending"]
     );
 
     res.json({ message: "Application submitted" });
 
   } catch (err) {
-    console.error("❌ Create application error:", err);
+    console.error("❌ createApplication error:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -50,11 +49,11 @@ export const createApplication = async (req, res) => {
 // ✅ GET MY APPLICATIONS
 export const getMyApplications = async (req, res) => {
   try {
-    const userEmail = req.user?.email || req.user?.sub;
+    const userId = req.user?.sub;
 
-    if (!userEmail) {
+    if (!userId) {
       return res.status(400).json({
-        message: "User email not found in token"
+        message: "User ID not found in token"
       });
     }
 
@@ -75,19 +74,19 @@ export const getMyApplications = async (req, res) => {
         p.age
       FROM applications a
       JOIN pets p ON a.petId = p.id
-      WHERE a.userEmail = ?
-    `, [userEmail]);
+      WHERE a.userId = ?
+    `, [userId]);
 
     res.json(rows);
 
   } catch (err) {
-    console.error("❌ Get applications error:", err);
+    console.error("❌ getMyApplications error:", err);
     res.status(500).json({ message: err.message });
   }
 };
 
 
-// ✅ UPDATE APPLICATION STATUS (ADMIN)
+// ✅ UPDATE APPLICATION STATUS
 export const updateApplicationStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -99,13 +98,13 @@ export const updateApplicationStatus = async (req, res) => {
       return res.status(500).json({ message: "DB not connected" });
     }
 
-    // ✅ Update status
+    // ✅ Update application
     await db.execute(
       "UPDATE applications SET status = ? WHERE id = ?",
       [status, id]
     );
 
-    // ✅ If approved → update pet
+    // ✅ If approved → mark pet unavailable
     if (status === "Approved") {
       const [rows] = await db.execute(
         "SELECT petId FROM applications WHERE id = ?",
@@ -125,7 +124,7 @@ export const updateApplicationStatus = async (req, res) => {
     res.json({ message: "Updated successfully" });
 
   } catch (err) {
-    console.error("❌ Update status error:", err);
+    console.error("❌ updateApplicationStatus error:", err);
     res.status(500).json({ message: err.message });
   }
 };
