@@ -88,7 +88,7 @@ paths:
         "404":
           description: Pet not found
 
-  # ================= APPLICATION ROUTES (FIX) =================
+  # ================= APPLICATION ROUTES =================
   /api/applications:
     post:
       summary: Create a new application
@@ -125,6 +125,41 @@ paths:
           description: Admin access required
         "404":
           description: Application not found
+
+  # ================= ADMIN ROUTES (🔥 THIS WAS MISSING) =================
+  /api/admin/users:
+    get:
+      summary: Get all users (Admin only)
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+
+  /api/admin/audit:
+    get:
+      summary: Get audit logs (Admin only)
+      responses:
+        "200":
+          description: List of audit logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
 
 components:
   schemas:
