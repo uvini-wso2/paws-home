@@ -3,27 +3,22 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-let connection = null;
+let pool = null;
 
 export const getDB = async () => {
-  if (connection) return connection;
+  if (pool) return pool;
 
-  try {
-    connection = await mysql.createConnection({
-      host: process.env.MYSQLHOST,
-      user: process.env.MYSQLUSER,
-      password: process.env.MYSQLPASSWORD,
-      database: process.env.MYSQLDATABASE,
-      port: process.env.MYSQLPORT,
-    });
+  pool = mysql.createPool({
+    host: process.env.MYSQLHOST,
+    user: process.env.MYSQLUSER,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE,
+    port: process.env.MYSQLPORT,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+  });
 
-    console.log("✅ DB connected");
-    return connection;
-
-  } catch (error) {
-    console.error("❌ DB connection failed:", error);
-
-    // 🚨 THIS LINE IS IMPORTANT
-    throw new Error("Database connection failed");
-  }
+  console.log("✅ DB pool created");
+  return pool;
 };
