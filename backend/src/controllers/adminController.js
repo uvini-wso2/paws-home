@@ -12,18 +12,13 @@ export const getUsers = async (req, res) => {
     }
 
     const [rows] = await db.execute(`
-      SELECT 
-        id,
-        email,
-        role,
-        status
-      FROM users
+      SELECT id, email, role, status FROM users
     `);
 
     res.json(rows);
 
   } catch (err) {
-    console.error("❌ Users error:", err);
+    console.error("❌ getUsers error:", err);
     res.status(500).json({
       message: "Failed to fetch users",
       error: err.message
@@ -33,7 +28,7 @@ export const getUsers = async (req, res) => {
 
 
 /**
- * ✅ GET AUDIT LOGS
+ * ✅ GET AUDIT LOGS (FIXED COLUMN)
  */
 export const getAuditLogs = async (req, res) => {
   try {
@@ -46,7 +41,7 @@ export const getAuditLogs = async (req, res) => {
     const [rows] = await db.execute(`
       SELECT 
         a.id,
-        a.userEmail,
+        a.userId,  -- ✅ FIXED (NOT userEmail)
         'Applied for adoption' AS action,
         a.status,
         a.createdAt,
@@ -60,7 +55,7 @@ export const getAuditLogs = async (req, res) => {
     res.json(rows);
 
   } catch (err) {
-    console.error("❌ Audit error:", err);
+    console.error("❌ getAuditLogs error:", err);
     res.status(500).json({
       message: "Failed to fetch audit logs",
       error: err.message
