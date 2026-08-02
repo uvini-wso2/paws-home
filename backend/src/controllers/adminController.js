@@ -1,7 +1,7 @@
 import { getDB } from "../config/db.js";
 
 /**
- * GET ALL USERS
+ * ✅ GET ALL USERS
  */
 export const getUsers = async (req, res) => {
   try {
@@ -15,13 +15,15 @@ export const getUsers = async (req, res) => {
       SELECT 
         id,
         email,
-        role
+        role,
+        status
       FROM users
     `);
 
     res.json(rows);
+
   } catch (err) {
-    console.error("❌ Error fetching users:", err);
+    console.error("❌ Users error:", err);
     res.status(500).json({
       message: "Failed to fetch users",
       error: err.message
@@ -29,8 +31,9 @@ export const getUsers = async (req, res) => {
   }
 };
 
+
 /**
- * GET AUDIT LOGS
+ * ✅ GET AUDIT LOGS
  */
 export const getAuditLogs = async (req, res) => {
   try {
@@ -43,20 +46,21 @@ export const getAuditLogs = async (req, res) => {
     const [rows] = await db.execute(`
       SELECT 
         a.id,
-        a.userId,   -- ✅ FIXED
+        a.userEmail,
         'Applied for adoption' AS action,
         a.status,
         a.createdAt,
         p.name AS petName,
         p.species
       FROM applications a
-      JOIN pets p ON a.petId = p.id
+      LEFT JOIN pets p ON a.petId = p.id
       ORDER BY a.createdAt DESC
     `);
 
     res.json(rows);
+
   } catch (err) {
-    console.error("❌ Error fetching audit logs:", err);
+    console.error("❌ Audit error:", err);
     res.status(500).json({
       message: "Failed to fetch audit logs",
       error: err.message

@@ -5,12 +5,12 @@ export const createApplication = async (req, res) => {
   try {
     const { petId } = req.body;
 
-    // ✅ Use userId from token (NOT email)
-    const userId = req.user?.sub;
+    // ✅ Use email consistently
+    const userEmail = req.user?.email || req.user?.sub;
 
-    if (!userId) {
+    if (!userEmail) {
       return res.status(400).json({
-        message: "User ID not found in token"
+        message: "User email not found in token"
       });
     }
 
@@ -22,8 +22,8 @@ export const createApplication = async (req, res) => {
 
     // ✅ Check if already applied
     const [existing] = await db.execute(
-      "SELECT * FROM applications WHERE petId = ? AND userId = ?",
-      [petId, userId]
+      "SELECT * FROM applications WHERE petId = ? AND userEmail = ?",
+      [petId, userEmail]
     );
 
     if (existing.length > 0) {
@@ -34,14 +34,14 @@ export const createApplication = async (req, res) => {
 
     // ✅ Insert application
     await db.execute(
-      "INSERT INTO applications (petId, userId, status) VALUES (?, ?, ?)",
-      [petId, userId, "Pending"]
+      "INSERT INTO applications (petId, userEmail, status) VALUES (?, ?, ?)",
+      [petId, userEmail, "Pending"]
     );
 
     res.json({ message: "Application submitted" });
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ Create application error:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -50,11 +50,11 @@ export const createApplication = async (req, res) => {
 // ✅ GET MY APPLICATIONS
 export const getMyApplications = async (req, res) => {
   try {
-    const userId = req.user?.sub;
+    const userEmail = req.user?.email || req.user?.sub;
 
-    if (!userId) {
+    if (!userEmail) {
       return res.status(400).json({
-        message: "User ID not found in token"
+        message: "User email not found in token"
       });
     }
 
@@ -75,13 +75,13 @@ export const getMyApplications = async (req, res) => {
         p.age
       FROM applications a
       JOIN pets p ON a.petId = p.id
-      WHERE a.userId = ?
-    `, [userId]);
+      WHERE a.userEmail = ?
+    `, [userEmail]);
 
     res.json(rows);
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ Get applications error:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -125,7 +125,7 @@ export const updateApplicationStatus = async (req, res) => {
     res.json({ message: "Updated successfully" });
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ Update status error:", err);
     res.status(500).json({ message: err.message });
   }
 };
