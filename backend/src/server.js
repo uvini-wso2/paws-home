@@ -10,22 +10,25 @@ import { getDB } from "./config/db.js";
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-// ✅ CORS
+// ✅ CORS (Production-safe but flexible)
 app.use(
   cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    origin: "*", // 🔥 keep for now (safe for demo)
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// ✅ JSON
+// ✅ Handle preflight requests (VERY IMPORTANT for CORS)
+app.options("*", cors());
+
+// ✅ Parse JSON
 app.use(express.json());
 
-// ✅ ROUTES
-app.use("/api/applications", applicationRoutes);
-app.use("/api/pets", petRoutes);
-app.use("/api/admin", adminRoutes);
+// ✅ TEST ROUTE (VERY IMPORTANT for debugging)
+app.get("/test", (req, res) => {
+  res.json({ message: "✅ Test route working" });
+});
 
 // ✅ HEALTH CHECK
 app.get("/", (req, res) => {
@@ -38,26 +41,34 @@ app.get("/api/message", (req, res) => {
   });
 });
 
-// ✅ GLOBAL ERROR HANDLER
+// ✅ ROUTES
+app.use("/api/pets", petRoutes);
+app.use("/api/applications", applicationRoutes);
+app.use("/api/admin", adminRoutes);
+
+// ✅ GLOBAL ERROR HANDLER (CRUCIAL FOR JSON ERRORS)
 app.use((err, req, res, next) => {
-  console.error("🔥 Server Error:", err.stack);
+  console.error("🔥 Server Error:", err.stack || err);
+
   res.status(500).json({
-    message: "Something went wrong in the server",
+    message: "Internal server error",
   });
 });
 
 // ✅ START SERVER ONLY AFTER DB CONNECTS
 const startServer = async () => {
   try {
-    await getDB(); // 🔥 IMPORTANT FIX
+    console.log("🔌 Connecting to DB...");
+    await getDB();
+    console.log("✅ DB Connected successfully");
 
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
 
   } catch (error) {
-    console.error("❌ Failed to start server:", error);
-    process.exit(1); // 🚨 critical for Choreo
+    console.error("❌ Failed to start server:", error.message);
+    process.exit(1); // 🚨 Required for Choreo to detect failure
   }
 };
 

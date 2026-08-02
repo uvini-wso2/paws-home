@@ -11,8 +11,14 @@ export const getUsers = async (accessToken) => {
     }
   );
 
-  const data = await response.json();
+  let data;
 
+  try {
+    data = await response.json();
+  } catch (err) {
+    console.error("❌ Not JSON:", err);
+    throw new Error("Server returned invalid response");
+  }
   if (!response.ok) {
     throw new Error(data.message);
   }
