@@ -6,7 +6,13 @@ import { getDB } from "../config/db.js";
 export const createApplication = async (req, res) => {
   try {
     const { petId } = req.body;
-    const userEmail = req.user.email || req.user.sub;
+    const userEmail = req.user?.email || req.user?.sub;
+
+    if (!userEmail) {
+      return res.status(400).json({
+        message: "User email not found in token"
+      });
+    }
 
     const db = await getDB();
 
@@ -38,7 +44,13 @@ export const createApplication = async (req, res) => {
 
 export const getMyApplications = async (req, res) => {
   try {
-    const userEmail = req.user.email || req.user.sub;
+    const userEmail = req.user?.email || req.user?.sub;
+
+    if (!userEmail) {
+      return res.status(400).json({
+        message: "User email not found in token"
+      });
+    }
 
     const db = await getDB();
 
