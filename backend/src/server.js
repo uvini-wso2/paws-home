@@ -10,64 +10,53 @@ import { getDB } from "./config/db.js";
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-// ✅ CORS (Production-safe but flexible)
-app.use(
-  cors({
-    origin: "*", // 🔥 keep for now (safe for demo)
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// ✅ IMPORTANT: base path for Choreo
+const BASE_PATH = process.env.BASE_PATH || "";
 
-// ✅ Parse JSON
+// ✅ CORS
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
 app.use(express.json());
 
-// ✅ TEST ROUTE (VERY IMPORTANT for debugging)
-app.get("/test", (req, res) => {
+// ✅ DEBUG ROUTE
+app.get(`${BASE_PATH}/test`, (req, res) => {
   res.json({ message: "✅ Test route working" });
 });
 
-// ✅ HEALTH CHECK
-app.get("/", (req, res) => {
+// ✅ HEALTH
+app.get(`${BASE_PATH}/`, (req, res) => {
   res.send("Backend is Running!");
 });
 
-app.get("/api/message", (req, res) => {
-  res.json({
-    message: "Paws Home Backend Running!",
-  });
-});
-
-app.use((req, res, next) => {
-  console.log(`➡️ ${req.method} ${req.url}`);
-  next();
+app.get(`${BASE_PATH}/api/message`, (req, res) => {
+  res.json({ message: "Paws Home Backend Running!" });
 });
 
 // ✅ ROUTES
-app.use("/api/pets", petRoutes);
-app.use("/api/applications", applicationRoutes);
-app.use("/api/admin", adminRoutes);
+app.use(`${BASE_PATH}/api/pets`, petRoutes);
+app.use(`${BASE_PATH}/api/applications`, applicationRoutes);
+app.use(`${BASE_PATH}/api/admin`, adminRoutes);
 
-// ✅ GLOBAL ERROR HANDLER (CRUCIAL FOR JSON ERRORS)
+// ✅ ERROR HANDLER
 app.use((err, req, res, next) => {
-  console.error("🔥 Server Error:", err.stack || err);
-
-  res.status(500).json({
-    message: "Internal server error",
-  });
+  console.error("🔥 Server Error:", err);
+  res.status(500).json({ message: "Internal server error" });
 });
 
-// ✅ START SERVER ONLY AFTER DB CONNECTS
+// ✅ START SERVER
 const startServer = async () => {
   try {
-    console.log("🔌 Trying DB connection...");
+    console.log("🔌 Connecting DB...");
     await getDB();
     console.log("✅ DB connected");
-  } catch (error) {
-    console.error("⚠️ DB failed, but server will still run:", error.message);
+  } catch (err) {
+    console.error("⚠️ DB failed:", err.message);
   }
 
-  // 🚀 ALWAYS START SERVER
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 Server running on ${PORT}`);
   });
