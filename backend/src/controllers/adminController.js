@@ -2,11 +2,9 @@ import { getDB } from "../config/db.js";
 
 /**
  * GET ALL USERS
- * Reads from users table (NOT applications)
  */
 export const getUsers = async (req, res) => {
   try {
-
     const db = await getDB();
 
     if (!db) {
@@ -15,26 +13,27 @@ export const getUsers = async (req, res) => {
 
     const [rows] = await db.execute(`
       SELECT 
+        id,
         email,
-        role,
-        status
+        role
       FROM users
     `);
 
     res.json(rows);
   } catch (err) {
-    console.error("Error fetching users:", err);
-    res.status(500).json({ message: err.message });
+    console.error("❌ Error fetching users:", err);
+    res.status(500).json({
+      message: "Failed to fetch users",
+      error: err.message
+    });
   }
 };
 
 /**
  * GET AUDIT LOGS
- * Using applications as audit activity
  */
 export const getAuditLogs = async (req, res) => {
   try {
-
     const db = await getDB();
 
     if (!db) {
@@ -44,7 +43,7 @@ export const getAuditLogs = async (req, res) => {
     const [rows] = await db.execute(`
       SELECT 
         a.id,
-        a.userEmail,
+        a.userId,   -- ✅ FIXED
         'Applied for adoption' AS action,
         a.status,
         a.createdAt,
@@ -57,7 +56,10 @@ export const getAuditLogs = async (req, res) => {
 
     res.json(rows);
   } catch (err) {
-    console.error("Error fetching audit logs:", err);
-    res.status(500).json({ message: err.message });
+    console.error("❌ Error fetching audit logs:", err);
+    res.status(500).json({
+      message: "Failed to fetch audit logs",
+      error: err.message
+    });
   }
 };
