@@ -6,11 +6,9 @@ dotenv.config();
 let connection = null;
 
 export const getDB = async () => {
-  try {
-    if (connection) {
-      return connection;
-    }
+  if (connection) return connection;
 
+  try {
     connection = await mysql.createConnection({
       host: process.env.MYSQLHOST,
       user: process.env.MYSQLUSER,
@@ -20,11 +18,12 @@ export const getDB = async () => {
     });
 
     console.log("✅ DB connected");
-
     return connection;
 
   } catch (error) {
-    console.error("❌ DB connection failed:", error.message);
-    return null;
+    console.error("❌ DB connection failed:", error);
+
+    // 🚨 THIS LINE IS IMPORTANT
+    throw new Error("Database connection failed");
   }
 };

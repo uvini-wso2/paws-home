@@ -10,20 +10,17 @@ import { getDB } from "./config/db.js";
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-// ✅ CORS (IMPORTANT for frontend + Choreo)
+// ✅ CORS
 app.use(
   cors({
-    origin: "*", // 🔥 for now (later restrict to frontend URL)
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// ✅ Parse JSON
+// ✅ JSON
 app.use(express.json());
-
-// ✅ Ensure DB connects at startup
-getDB();
 
 // ✅ ROUTES
 app.use("/api/applications", applicationRoutes);
@@ -41,7 +38,7 @@ app.get("/api/message", (req, res) => {
   });
 });
 
-// ✅ GLOBAL ERROR HANDLER (VERY IMPORTANT)
+// ✅ GLOBAL ERROR HANDLER
 app.use((err, req, res, next) => {
   console.error("🔥 Server Error:", err.stack);
   res.status(500).json({
@@ -49,7 +46,19 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ✅ START SERVER
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-});
+// ✅ START SERVER ONLY AFTER DB CONNECTS
+const startServer = async () => {
+  try {
+    await getDB(); // 🔥 IMPORTANT FIX
+
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server is running on port ${PORT}`);
+    });
+
+  } catch (error) {
+    console.error("❌ Failed to start server:", error);
+    process.exit(1); // 🚨 critical for Choreo
+  }
+};
+
+startServer();
