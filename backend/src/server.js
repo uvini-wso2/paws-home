@@ -16,7 +16,7 @@ app.use(
     origin: [
       "http://localhost:5174", // local dev
       "https://d0dd8f3e-5dbd-4ef5-9668-68b3a1970e0e.e1-us-east-azure.choreoapps.dev",
-      "https://676fd26f-fa41-4a71-bbc4-74d8adabaafb-dev.e1-us-east-azure.choreoapis.dev/paws-and-homes/paws-home-backend/v1.0"
+      "https://676fd26f-fa41-4a71-bbc4-74d8adabaafb-dev.e1-us-east-azure.choreoapis.dev"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
