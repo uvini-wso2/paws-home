@@ -8,9 +8,9 @@ import adminRoutes from "./routes/adminRoutes.js";
 import { getDB } from "./config/db.js";
 
 const app = express();
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT;
 
-// ✅ IMPORTANT: CORS CONFIG (FIXED)
+// IMPORTANT: CORS CONFIG (FIXED)
 app.use(
   cors({
     origin: [
@@ -64,6 +64,8 @@ const start = async () => {
   } catch (e) {
     console.log("⚠️ DB failed (still starting):", e.message);
   }
+
+  console.log("PORT VALUE:", PORT);
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 Server running on ${PORT}`);
