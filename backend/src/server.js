@@ -23,9 +23,6 @@ app.use(
   })
 );
 
-// HANDLE PREFLIGHT (VERY IMPORTANT)
-app.options("*", cors());
-
 // BODY PARSER
 app.use(express.json());
 
