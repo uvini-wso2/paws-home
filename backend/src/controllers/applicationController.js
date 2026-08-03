@@ -1,6 +1,6 @@
 import { getDB } from "../config/db.js";
 
-// ✅ CREATE APPLICATION
+// CREATE APPLICATION
 export const createApplication = async (req, res) => {
   try {
     const { petId } = req.body;
@@ -19,7 +19,7 @@ export const createApplication = async (req, res) => {
       return res.status(500).json({ message: "DB not connected" });
     }
 
-    // ✅ Check duplicate
+    // Check duplicate
     const [existing] = await db.execute(
       "SELECT * FROM applications WHERE petId = ? AND userId = ?",
       [petId, userId]
@@ -31,7 +31,7 @@ export const createApplication = async (req, res) => {
       });
     }
 
-    // ✅ Insert
+    // Insert
     await db.execute(
       "INSERT INTO applications (petId, userId, status) VALUES (?, ?, ?)",
       [petId, userId, "Pending"]
@@ -46,7 +46,7 @@ export const createApplication = async (req, res) => {
 };
 
 
-// ✅ GET MY APPLICATIONS
+// GET MY APPLICATIONS
 export const getMyApplications = async (req, res) => {
   try {
     const userId = req.user?.sub;
@@ -86,7 +86,7 @@ export const getMyApplications = async (req, res) => {
 };
 
 
-// ✅ UPDATE APPLICATION STATUS
+// UPDATE APPLICATION STATUS
 export const updateApplicationStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -98,13 +98,13 @@ export const updateApplicationStatus = async (req, res) => {
       return res.status(500).json({ message: "DB not connected" });
     }
 
-    // ✅ Update application
+    // Update application
     await db.execute(
       "UPDATE applications SET status = ? WHERE id = ?",
       [status, id]
     );
 
-    // ✅ If approved → mark pet unavailable
+    // If approved → mark pet unavailable
     if (status === "Approved") {
       const [rows] = await db.execute(
         "SELECT petId FROM applications WHERE id = ?",

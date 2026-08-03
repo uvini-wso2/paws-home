@@ -11,7 +11,7 @@ import { updateApplicationStatus } from "../controllers/applicationController.js
 
 const router = express.Router();
 
-// ✅ Get all users
+// Get all users
 router.get(
   "/users",
   requireAuth,
@@ -19,7 +19,7 @@ router.get(
   getUsers
 );
 
-// ✅ Get audit logs
+// Get audit logs
 router.get(
   "/audit",
   requireAuth,
@@ -27,7 +27,7 @@ router.get(
   getAuditLogs
 );
 
-// ✅ Update application status (ADMIN ONLY)
+// Update application status (ADMIN ONLY)
 router.put(
   "/applications/:id/status",
   requireAuth,

@@ -1,6 +1,6 @@
 import { getDB } from "../config/db.js";
 
-// ✅ GET ALL PETS
+// GET ALL PETS
 export const getAllPets = async (req, res) => {
   try {
     const db = await getDB();
@@ -19,7 +19,7 @@ export const getAllPets = async (req, res) => {
 };
 
 
-// ✅ CREATE PET
+// CREATE PET
 export const createPet = async (req, res) => {
   try {
     const { name, species, breed, age } = req.body;
@@ -52,7 +52,7 @@ export const createPet = async (req, res) => {
 };
 
 
-// ✅ GET MY PETS
+// GET MY PETS
 export const getMyPets = async (req, res) => {
   try {
     const userEmail = req.user?.email || req.user?.sub;
@@ -83,7 +83,7 @@ export const getMyPets = async (req, res) => {
 };
 
 
-// ✅ DELETE PET
+// DELETE PET
 export const deletePet = async (req, res) => {
   try {
     const { id } = req.params;

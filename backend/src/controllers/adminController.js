@@ -1,7 +1,7 @@
 import { getDB } from "../config/db.js";
 
 /**
- * ✅ GET ALL USERS
+ * GET ALL USERS
  */
 export const getUsers = async (req, res) => {
   try {
@@ -28,7 +28,7 @@ export const getUsers = async (req, res) => {
 
 
 /**
- * ✅ GET AUDIT LOGS (FIXED COLUMN)
+ * GET AUDIT LOGS (FIXED COLUMN)
  */
 export const getAuditLogs = async (req, res) => {
   try {
@@ -41,7 +41,7 @@ export const getAuditLogs = async (req, res) => {
     const [rows] = await db.execute(`
       SELECT 
         a.id,
-        a.userId,  -- ✅ FIXED (NOT userEmail)
+        a.userId,  
         'Applied for adoption' AS action,
         a.status,
         a.createdAt,
