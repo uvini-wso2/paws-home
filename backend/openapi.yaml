@@ -37,6 +37,7 @@ paths:
   # ================= PET ROUTES =================
   /api/pets:
     get:
+      x-wso2-disable-security: true
       summary: Retrieve all pets
       responses:
         "200":
