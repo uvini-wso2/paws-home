@@ -8,15 +8,14 @@ import adminRoutes from "./routes/adminRoutes.js";
 import { getDB } from "./config/db.js";
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 8080;
 
-// IMPORTANT: CORS CONFIG (FIXED)
+// CORS (ONLY ONE)
 app.use(
   cors({
     origin: [
-      "http://localhost:5174", // local dev
-      "https://d0dd8f3e-5dbd-4ef5-9668-68b3a1970e0e.e1-us-east-azure.choreoapps.dev",
-      "https://676fd26f-fa41-4a71-bbc4-74d8adabaafb-dev.e1-us-east-azure.choreoapis.dev"
+      "http://localhost:5174",
+      "https://d0dd8f3e-5dbd-4ef5-9668-68b3a1970e0e.e1-us-east-azure.choreoapps.dev"
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -24,21 +23,22 @@ app.use(
   })
 );
 
-// BODY PARSER
+// JSON
 app.use(express.json());
 
-// TEST ROUTE
+// ROOT (IMPORTANT for Choreo)
+app.get("/", (req, res) => {
+  res.status(200).send("OK");
+});
+
+// HEALTH CHECK (IMPORTANT)
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "healthy" });
+});
+
+// TEST
 app.get("/test", (req, res) => {
   res.json({ message: "TEST WORKING" });
-});
-
-// HEALTH CHECK
-app.get("/", (req, res) => {
-  res.send("Backend is Running!");
-});
-
-app.get("/api/message", (req, res) => {
-  res.json({ message: "Paws Home Backend Running!" });
 });
 
 // ROUTES
@@ -46,14 +46,14 @@ app.use("/api/pets", petRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/admin", adminRoutes);
 
-// SAFE 404 HANDLER
+// 404
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
 // ERROR HANDLER
 app.use((err, req, res, next) => {
-  console.error("🔥 ERROR:", err);
+  console.error("ERROR:", err);
   res.status(500).json({ message: "Server error" });
 });
 
@@ -61,15 +61,13 @@ app.use((err, req, res, next) => {
 const start = async () => {
   try {
     await getDB();
-    console.log("✅ DB connected");
+    console.log("DB connected");
   } catch (e) {
-    console.log("⚠️ DB failed (still starting):", e.message);
+    console.log("DB failed:", e.message);
   }
 
-  console.log("PORT VALUE:", PORT);
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Server running on ${PORT}`);
+  app.listen(PORT, () => {
+    console.log("Server running on", PORT);
   });
 };
 
