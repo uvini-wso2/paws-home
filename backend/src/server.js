@@ -41,6 +41,11 @@ app.get("/test", (req, res) => {
   res.json({ message: "TEST WORKING" });
 });
 
+// MESSAGE (was missing, restored)
+app.get("/api/message", (req, res) => {
+  res.json({ message: "Backend running" });
+});
+
 // ROUTES
 app.use("/api/pets", petRoutes);
 app.use("/api/applications", applicationRoutes);
