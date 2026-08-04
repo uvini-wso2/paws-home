@@ -8,7 +8,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import { getDB } from "./config/db.js";
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3002;
 
 // CORS (ONLY ONE)
 app.use(
