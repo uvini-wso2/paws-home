@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://676fd26f-fa41-4a71-bbc4-74d8adabaafb-dev.e1-us-east-azure.choreoapis.dev/paws-and-homes/paws-home-backend/v1.0";
+  import.meta.env.VITE_API_BASE_URL || "https://676fd26f-fa41-4a71-bbc4-74d8adabaafb-dev.e1-us-east-azure.choreoapis.dev";
 
 export const createApplication = async (petId, accessToken) => {
   const response = await fetch(`${API_BASE_URL}/api/applications`, {
